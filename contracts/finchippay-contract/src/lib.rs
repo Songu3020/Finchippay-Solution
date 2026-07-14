@@ -1158,13 +1158,20 @@ impl FinchippayContract {
         if recipients.len() != amounts.len() {
             panic!("arrays must have equal length");
         }
-        let token = token::Client::new(&env, &token_address);
-        for i in 0..recipients.len() {
-            let to = recipients.get(i).unwrap();
+        // Pre-validate: sum all amounts and verify they are all positive
+        // before initiating any transfers, ensuring atomicity.
+        let mut total_amount: i128 = 0;
+        for i in 0..amounts.len() {
             let amount = amounts.get(i).unwrap();
             if amount <= 0 {
                 panic!("amount must be positive");
             }
+            total_amount = total_amount.checked_add(amount).expect("total overflow");
+        }
+        let token = token::Client::new(&env, &token_address);
+        for i in 0..recipients.len() {
+            let to = recipients.get(i).unwrap();
+            let amount = amounts.get(i).unwrap();
             token.transfer(&from, &to, &amount);
 
             let total: i128 = env
