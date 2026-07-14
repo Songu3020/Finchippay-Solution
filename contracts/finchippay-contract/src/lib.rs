@@ -123,6 +123,9 @@ pub struct Escrow {
     pub status: EscrowStatus,
 }
 
+/// Maximum number of escrows tracked per recipient index (prevents state bloat).
+const MAX_USER_ESCROWS: u32 = 100;
+
 // ─── Streaming payments ───────────────────────────────────────────────────────
 
 /// A continuous per-ledger payment stream from `payer` to `recipient`.
@@ -192,6 +195,9 @@ pub struct MultiSigProposal {
     /// Subset of `signers` that have approved so far.
     pub approvals: Vec<Address>,
     pub status: MultiSigStatus,
+    /// Ledger sequence number after which this proposal expires.
+    /// 0 means no expiration (legacy).
+    pub expiration_ledger: u32,
 }
 
 // ─── Security bounds ──────────────────────────────────────────────────────────
@@ -233,6 +239,8 @@ pub enum DataKey {
     // Escrow
     EscrowCount,
     Escrow(u32),
+    /// Index of escrow IDs associated with a recipient address.
+    EscrowByRecipient(Address),
     // Streaming
     StreamCount,
     Stream(u32),
@@ -675,11 +683,38 @@ impl FinchippayContract {
             .set(&DataKey::EscrowCount, &(next_id + 1));
         bump(&env, &DataKey::EscrowCount);
 
+        // Index escrow under recipient for queries.
+        let rkey = DataKey::EscrowByRecipient(to.clone());
+        let mut r_escrows: Vec<u32> = env
+            .storage()
+            .persistent()
+            .get(&rkey)
+            .unwrap_or(Vec::new(&env));
+        if r_escrows.len() < MAX_USER_ESCROWS {
+            r_escrows.push_back(next_id);
+            env.storage().persistent().set(&rkey, &r_escrows);
+            bump(&env, &rkey);
+        }
+
         env.events().publish(
             (Symbol::new(&env, "escrow_create"), next_id),
             (from, to, amount, release_ledger),
         );
         next_id
+    }
+
+    /// Return the list of escrow IDs associated with a recipient address.
+    pub fn get_user_escrows(env: Env, recipient: Address) -> Vec<u32> {
+        let key = DataKey::EscrowByRecipient(recipient);
+        let val: Vec<u32> = env
+            .storage()
+            .persistent()
+            .get(&key)
+            .unwrap_or(Vec::new(&env));
+        if env.storage().persistent().has(&key) {
+            bump(&env, &key);
+        }
+        val
     }
 
     /// Recipient claims the escrowed funds after `release_ledger` has passed.
