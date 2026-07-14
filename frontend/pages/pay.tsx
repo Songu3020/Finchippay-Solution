@@ -5,23 +5,16 @@
  */
 import Head from "next/head";
 import { useRouter } from "next/router";
-import Head from "next/head";
 import { useState, useEffect } from "react";
-import Head from "next/head";
 import SendPaymentForm from "@/components/SendPaymentForm";
-import Head from "next/head";
 import WalletConnect from "@/components/WalletConnect";
-import Head from "next/head";
 import { getXLMBalance, getContractTipTotal, CONTRACT_ID } from "@/lib/stellar";
-import Head from "next/head";
 import { formatStroopsToXLM } from "@/utils/format";
-import Head from "next/head";
 import {
   canRedeemPaymentLink,
   markPaymentLinkRedeemed,
   parsePaymentLinkQuery,
 } from "@/lib/paymentLinks";
-import Head from "next/head";
 import { useWallet } from "@/lib/useWallet";
 
 interface PrefillData {

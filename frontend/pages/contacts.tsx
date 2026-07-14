@@ -28,8 +28,7 @@ import { useWallet } from "@/lib/useWallet";
 export default function Contacts() {
   const { publicKey } = useWallet();
   const router = useRouter();
-  <Head><title>Contacts | Finchippay-Solution</title><meta name="description" content="Manage your Stellar address book and federation contacts." /></Head>
-  const { visible: toastVisible, message: toastMessage, showToast } = useToast();
+  const { showToast } = useToast();
 
   // Contact management state
   const [contacts, setContacts] = useState<AddressBookContact[]>(loadAddressBookContacts);
@@ -156,6 +155,10 @@ export default function Contacts() {
   if (!publicKey) {
     return (
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16 cursor-default select-none">
+        <Head>
+          <title>Contacts | Finchippay-Solution</title>
+          <meta name="description" content="Manage your Stellar address book and federation contacts on Finchippay." />
+        </Head>
         <div className="text-center mb-10">
           <h1 className="font-display text-3xl font-bold text-white mb-3">
             {`Contacts`}
@@ -181,12 +184,7 @@ export default function Contacts() {
         <p className="text-slate-400">{`Save and manage Stellar addresses`}</p>
       </div>
 
-      {/* Toast */}
-      {toastVisible && (
-        <div className="fixed bottom-4 right-4 z-50 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-4 py-2.5 rounded-lg text-sm animate-fade-in">
-          {toastMessage}
-        </div>
-      )}
+      {/* Toast notifications are handled by the global ToastContainer in _app.tsx */}
 
       <div className="space-y-8">
         {/* Add/Edit Contact Form */}

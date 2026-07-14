@@ -5,15 +5,10 @@
 
 import Head from "next/head";
 import { useRouter } from "next/router";
-import Head from "next/head";
 import { useEffect, useState } from "react";
-import Head from "next/head";
 import { Transaction, TransactionBuilder } from "@stellar/stellar-sdk";
-import Head from "next/head";
 import { NETWORK_PASSPHRASE } from "@/lib/stellar";
-import Head from "next/head";
 import { signTransactionWithWallet } from "@/lib/wallet";
-import Head from "next/head";
 import { formatAsset } from "@/utils/format";
 
 export default function MultiSigSignPage() {

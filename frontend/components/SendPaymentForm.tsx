@@ -764,7 +764,7 @@ function SendPaymentForm({
               <button
                 key={b.code}
                 type="button"
-                onClick={() => { setSelectedAsset(b.code); setAmount(""); }}
+                onClick={() => { setSelectedAsset(b.code as AssetType); setAmount(""); }}
                 className={clsx(
                   "px-4 py-1.5 rounded-full text-sm font-medium border transition-all",
                   selectedAsset === b.code

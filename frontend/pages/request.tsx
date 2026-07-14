@@ -1,14 +1,9 @@
 import Head from "next/head";
 import { useRouter } from "next/router";
-import Head from "next/head";
 import { useState, useEffect } from "react";
-import Head from "next/head";
 import SendPaymentForm from "@/components/SendPaymentForm";
-import Head from "next/head";
 import WalletConnect from "@/components/WalletConnect";
-import Head from "next/head";
 import { getXLMBalance } from "@/lib/stellar";
-import Head from "next/head";
 import { useWallet } from "@/lib/useWallet";
 
 interface PrefillData {
