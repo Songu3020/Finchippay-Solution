@@ -1104,23 +1104,15 @@ impl FinchippayContract {
             panic!("proposal is not pending");
         }
 
-        // Verify signer is in the allowed list.
-        let mut allowed = false;
-        for i in 0..proposal.signers.len() {
-            if proposal.signers.get(i).unwrap() == signer {
-                allowed = true;
-                break;
-            }
-        }
+        // Verify signer is in the allowed list using iterator.
+        let allowed = proposal.signers.iter().any(|s| s == signer);
         if !allowed {
             panic!("signer not authorised for this proposal");
         }
 
-        // Prevent duplicate approvals.
-        for i in 0..proposal.approvals.len() {
-            if proposal.approvals.get(i).unwrap() == signer {
-                panic!("already approved");
-            }
+        // Prevent duplicate approvals using iterator.
+        if proposal.approvals.iter().any(|a| a == signer) {
+            panic!("already approved");
         }
 
         proposal.approvals.push_back(signer.clone());
