@@ -222,8 +222,6 @@ const MIN_MULTISIG_AMOUNT: i128 = 1_000;
 const MAX_MULTISIG_SIGNERS: u32 = 20;
 /// Maximum number of recipients allowed in a single batch_send call.
 const MAX_BATCH_SIZE: u32 = 50;
-/// Maximum length for memo fields (enforced by Symbol type, kept for reference).
-const MAX_MEMO_LENGTH: u32 = 32;
 /// Contract version identifier (used for off-chain discovery).
 const CONTRACT_VERSION: u32 = 3;
 
