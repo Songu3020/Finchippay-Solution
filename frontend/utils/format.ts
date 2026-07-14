@@ -301,7 +301,7 @@ export function exportToCSV(payments: PaymentRecord[]): void {
   ].join("\r\n");
  
   const dateStamp = format(new Date(), "yyyy-MM-dd");
-  const filename = `stellar-micropay-transactions-${dateStamp}.csv`;
+  const filename = `finchippay-transactions-${dateStamp}.csv`;
   triggerDownload(csv, filename, "text/csv;charset=utf-8;");
 }
 
@@ -310,7 +310,7 @@ export function exportToCSV(payments: PaymentRecord[]): void {
  */
 export function exportToJSON(payments: PaymentRecord[]): void {
   const dateStamp = format(new Date(), "yyyy-MM-dd");
-  const filename = `stellar-micropay-transactions-${dateStamp}.json`;
+  const filename = `finchippay-transactions-${dateStamp}.json`;
   const json = JSON.stringify(payments, null, 2);
   triggerDownload(json, filename, "application/json;charset=utf-8;");
 }

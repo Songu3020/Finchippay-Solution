@@ -8,10 +8,10 @@ export interface AddressBookContact {
   updatedAt: number;
 }
 
-const ADDRESS_BOOK_STORAGE_KEY = "stellar-micropay:contacts";
-const LEGACY_CONTACTS_STORAGE_KEY = "stellar-micropay-contacts";
-const LEGACY_FAVOURITES_STORAGE_KEY = "stellar-micropay:favourites";
-const CONTACTS_UPDATED_EVENT = "stellar-micropay:contacts-updated";
+const ADDRESS_BOOK_STORAGE_KEY = "finchippay:contacts";
+const LEGACY_CONTACTS_STORAGE_KEY = "finchippay-contacts";
+const LEGACY_FAVOURITES_STORAGE_KEY = "finchippay:favourites";
+const CONTACTS_UPDATED_EVENT = "finchippay:contacts-updated";
 
 interface LegacyContact {
   id?: string;

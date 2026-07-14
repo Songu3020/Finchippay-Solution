@@ -54,7 +54,7 @@ interface CachedPaymentHistory {
   savedAt: number;
 }
 
-const PAYMENT_HISTORY_CACHE_PREFIX = "stellar-micropay:offline-payments:";
+const PAYMENT_HISTORY_CACHE_PREFIX = "finchippay:offline-payments:";
 
 function getPaymentHistoryCacheKey(publicKey: string, limit: number) {
   return `${PAYMENT_HISTORY_CACHE_PREFIX}${publicKey}:${limit}`;

@@ -34,21 +34,21 @@ export function parseStellarURI(uri: string): URIParseResult {
     // Accept three forms:
     //   1. stellar:pay?destination=…           (SEP-0007 canonical)
     //   2. web+stellar:pay?destination=…       (SEP-0007 PWA-friendly)
-    //   3. stellarmicropay://pay?to=…&amount=… (issue #209 deep link)
+    //   3. stellarfinchippay://pay?to=…&amount=… (issue #209 deep link)
     //
     // The third form uses `to=` as a shorthand for `destination=`; we
     // rewrite it transparently so the rest of the parser stays SEP-0007
     // shaped. Everything else (amount, memo, etc.) keeps the SEP-0007
     // parameter names.
     const stellarRegex = /^(?:web\+)?stellar:pay\?(.+)$/;
-    const microPayRegex = /^stellarmicropay:\/\/pay\?(.+)$/;
+    const microPayRegex = /^stellarfinchippay:\/\/pay\?(.+)$/;
     const stellarMatch = uri.match(stellarRegex);
     const microPayMatch = uri.match(microPayRegex);
 
     if (!stellarMatch && !microPayMatch) {
       return {
         success: false,
-        error: 'Invalid Stellar URI format. Expected stellar:pay, web+stellar:pay, or stellarmicropay://pay'
+        error: 'Invalid Stellar URI format. Expected stellar:pay, web+stellar:pay, or stellarfinchippay://pay'
       };
     }
 

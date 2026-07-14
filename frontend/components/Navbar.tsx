@@ -109,7 +109,7 @@ export default function Navbar() {
               <NavStarIcon className="h-4 w-4 text-stellar-400" />
             </div>
             <span className="font-display font-semibold tracking-tight text-slate-900 dark:text-white">
-              Stellar<span className="text-stellar-400">MicroPay</span>
+              Stellar<span className="text-stellar-400">Finchippay</span>
             </span>
           </Link>
 

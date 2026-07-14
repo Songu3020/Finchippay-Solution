@@ -9,19 +9,19 @@
  */
 export function getJwtToken(): string | null {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem("micropay_auth_token");
+  return localStorage.getItem("finchippay_auth_token");
 }
 
 /**
  * Sets the JWT token in local storage.
  */
 export function setJwtToken(token: string): void {
-  localStorage.setItem("micropay_auth_token", token);
+  localStorage.setItem("finchippay_auth_token", token);
 }
 
 /**
  * Clears the JWT token from local storage.
  */
 export function clearJwtToken(): void {
-  localStorage.removeItem("micropay_auth_token");
+  localStorage.removeItem("finchippay_auth_token");
 }

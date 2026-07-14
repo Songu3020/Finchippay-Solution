@@ -1,6 +1,6 @@
 /**
  * @file lib/stellarConfig.ts
- * @description Centralized configuration and Horizon server instantiation for Stellar MicroPay.
+ * @description Centralized configuration and Horizon server instantiation for Finchippay Solution.
  */
 
 import { Horizon, Networks } from "@stellar/stellar-sdk";
@@ -28,7 +28,7 @@ export function getNetworkConfig(): NetworkConfig {
     return DEFAULT_CONFIGS[network];
   }
 
-  const stored = localStorage.getItem("stellar-micropay:network");
+  const stored = localStorage.getItem("finchippay:network");
   if (stored) {
     try {
       return JSON.parse(stored);
@@ -43,7 +43,7 @@ export function getNetworkConfig(): NetworkConfig {
 
 export function setNetworkConfig(config: NetworkConfig): void {
   if (typeof window !== "undefined") {
-    localStorage.setItem("stellar-micropay:network", JSON.stringify(config));
+    localStorage.setItem("finchippay:network", JSON.stringify(config));
   }
 }
 

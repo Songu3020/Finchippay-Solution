@@ -9,7 +9,7 @@
  * base64 `?data=` links are still parsed for backwards compatibility.
  */
 
-const STORAGE_KEY = "micropay.paymentLinks.v1";
+const STORAGE_KEY = "finchippay.paymentLinks.v1";
 
 export type PaymentLinkStatus = "pending" | "redeemed" | "expired";
 

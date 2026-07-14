@@ -5,7 +5,7 @@
 @tailwind utilities;
 
 @layer base {
-    /* Issue #19 — Add dark/light mode toggle | Emmy123222/Stellar-MicroPay
+    /* Issue #19 — Add dark/light mode toggle | Emmy123222/Finchippay-Solution
      Dark mode variables (default) and light mode overrides via :root.light */
 
   :root {

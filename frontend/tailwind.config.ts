@@ -1,7 +1,7 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
-  // Issue #19 — Add dark/light mode toggle | Emmy123222/Stellar-MicroPay
+  // Issue #19 — Add dark/light mode toggle | FinChippay/Finchippay-Solution
   // Enable class-based dark mode so toggling 'dark' on <html> activates dark styles
   darkMode: "class",
   content: [

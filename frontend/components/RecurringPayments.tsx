@@ -11,7 +11,7 @@ export interface RecurringSchedule {
   createdAt: number;
 }
 
-const STORAGE_KEY = "stellar-micropay:recurring-schedules";
+const STORAGE_KEY = "finchippay:recurring-schedules";
 
 function loadSchedules(): RecurringSchedule[] {
   if (typeof window === "undefined") return [];

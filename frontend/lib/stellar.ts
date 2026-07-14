@@ -1,6 +1,6 @@
 /**
 * @file lib/stellar.ts
-* @description Core Stellar blockchain interaction helpers for Stellar MicroPay.
+* @description Core Stellar blockchain interaction helpers for Finchippay Solution.
 * Uses the Horizon REST API — no private keys ever touch this module.
 *
 * @see {@link https://developers.stellar.org/docs/data/horizon | Stellar Horizon Docs}
@@ -1061,7 +1061,7 @@ export function isValidStellarAddress(address: string): boolean {
  * Validate whether a string is a well-formed Stellar Federation address.
  *
  * Federation addresses use the SEP-0002 `name*domain` format, for example
- * `alice*stellarmicropay.io`.
+ * `alice*stellarfinchippay.io`.
  */
 export function isValidFederationAddress(address: string): boolean {
   const value = address.trim();

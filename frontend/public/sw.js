@@ -1,6 +1,6 @@
 const CACHE_VERSION = "v2";
-const PRECACHE = `stellar-micropay-precache-${CACHE_VERSION}`;
-const RUNTIME = `stellar-micropay-runtime-${CACHE_VERSION}`;
+const PRECACHE = `finchippay-precache-${CACHE_VERSION}`;
+const RUNTIME = `finchippay-runtime-${CACHE_VERSION}`;
 
 const APP_SHELL_URLS = [
   "/",
@@ -80,7 +80,7 @@ self.addEventListener("activate", (event) => {
           keys
             .filter(
               (key) =>
-                key.startsWith("stellar-micropay-") &&
+                key.startsWith("finchippay-") &&
                 ![PRECACHE, RUNTIME].includes(key)
             )
             .map((key) => caches.delete(key))

@@ -1,6 +1,6 @@
 /**
  * lib/wallet.ts
- * Freighter wallet integration for Stellar MicroPay.
+ * Freighter wallet integration for Finchippay Solution.
  *
  * Freighter is a browser extension wallet for Stellar.
  * Install it at: https://freighter.app

@@ -3,7 +3,7 @@
  * Form for sending XLM payments to any Stellar address.
  *
  * Issue #8 - Add a 'Send Max' button tooltip explaining the 1 XLM reserve
- * Emmy123222/Stellar-MicroPay
+ * FinChippay/Finchippay-Solution
  */
 
 import { withErrorBoundary } from "@/components/ErrorBoundary";
@@ -99,7 +99,7 @@ interface BarcodeDetectorLike {
   detect(source: ImageBitmapSource): Promise<BarcodeDetectorResult[]>;
 }
 
-const RECENT_RECIPIENTS_KEY = "stellar-micropay:recent-recipients";
+const RECENT_RECIPIENTS_KEY = "finchippay:recent-recipients";
 const MAX_RECENT = 3;
 
 function createInitialStepTimings(): Record<PaymentStepId, PaymentStepTiming> {

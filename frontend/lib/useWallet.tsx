@@ -20,7 +20,7 @@ interface WalletContextValue {
 
 const WalletContext = createContext<WalletContextValue | undefined>(undefined);
 
-const LAST_PUBLIC_KEY_STORAGE_KEY = "stellar-micropay:last-public-key";
+const LAST_PUBLIC_KEY_STORAGE_KEY = "finchippay:last-public-key";
 
 function loadLastPublicKey() {
   if (typeof window === "undefined") return null;
