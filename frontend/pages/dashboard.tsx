@@ -872,7 +872,7 @@ export default function Dashboard({ stellarURI }: DashboardProps) {
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 animate-fade-in cursor-default select-none">
       <Head>
         <title>Dashboard | Finchippay-Solution</title>
-        <meta name="description" content="Manage your Stellar account, view balances, and send micropayments instantly. Real-time transaction history and wallet summary." />
+        <meta name="description" content="Manage your Stellar account, view balances, send payments, and monitor streaming, escrow, and multi-sig activity. Real-time dashboard with analytics and wallet summary." />
         <link rel="canonical" href="https://finchippay.vercel.app/dashboard" />
       </Head>
       <div className="mb-8">

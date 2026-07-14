@@ -205,11 +205,11 @@ export default function App({ Component, pageProps }: AppProps) {
       <ToastProvider>
       <WalletProvider>
         <Head>
-          <title>Finchippay-Solution | Instant Micropayments</title>
+          <title>Finchippay-Solution | Instant Stellar Payments</title>
           <meta name="viewport" content="width=device-width, initial-scale=1" />
           <meta
             name="description"
-            content="Send instant, low-fee micropayments globally using the Stellar network. Secure, fast, and transparent."
+            content="Send instant, low-fee payments globally using the Stellar network — streaming, escrow, multi-sig, and tips. Non-custodial, secure, and transparent."
           />
           <link rel="canonical" href="https://finchippay.vercel.app/" />
           <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
@@ -217,11 +217,11 @@ export default function App({ Component, pageProps }: AppProps) {
           <meta property="og:url" content="https://finchippay.vercel.app/" />
           <meta
             property="og:title"
-            content="Finchippay-Solution | Instant Micropayments"
+            content="Finchippay-Solution | Instant Stellar Payments"
           />
           <meta
             property="og:description"
-            content="Send instant, low-fee micropayments globally using the Stellar network. Secure, fast, and transparent."
+            content="Send instant, low-fee payments globally using the Stellar network — streaming, escrow, multi-sig, and tips. Non-custodial, secure, and transparent."
           />
           <meta
             property="og:image"
@@ -230,11 +230,11 @@ export default function App({ Component, pageProps }: AppProps) {
           <meta name="twitter:card" content="summary_large_image" />
           <meta
             name="twitter:title"
-            content="Finchippay-Solution | Instant Micropayments"
+            content="Finchippay-Solution | Instant Stellar Payments"
           />
           <meta
             name="twitter:description"
-            content="Send instant, low-fee micropayments globally using the Stellar network. Secure, fast, and transparent."
+            content="Send instant, low-fee payments globally using the Stellar network — streaming, escrow, multi-sig, and tips. Non-custodial, secure, and transparent."
           />
           <meta
             name="twitter:image"
