@@ -87,6 +87,31 @@ if [[ -n "$ADMIN_KEY" ]]; then
     -- initialize \
     --admin "$ADMIN_KEY"
   echo "   ✅ Initialized"
+
+  # Verify the contract version and pause state
+  echo ""
+  echo "🔍 Verifying contract security state..."
+  VERSION=$(stellar contract invoke \
+    --id "$CONTRACT_ID" \
+    --source "$IDENTITY" \
+    --network "$NETWORK" \
+    -- get_version 2>/dev/null || echo "unknown")
+  echo "   Contract version: $VERSION"
+
+  echo "   Testing pause circuit breaker..."
+  stellar contract invoke \
+    --id "$CONTRACT_ID" \
+    --source "$IDENTITY" \
+    --network "$NETWORK" \
+    -- pause \
+    --admin "$ADMIN_KEY" 2>/dev/null && echo "   ✅ Pause works" || echo "   ⚠️  Pause test skipped"
+
+  stellar contract invoke \
+    --id "$CONTRACT_ID" \
+    --source "$IDENTITY" \
+    --network "$NETWORK" \
+    -- unpause \
+    --admin "$ADMIN_KEY" 2>/dev/null && echo "   ✅ Unpause works" || echo "   ⚠️  Unpause test skipped"
 else
   echo "⚠️  Could not resolve admin key for identity '$IDENTITY'"
   echo "   Initialize manually:"

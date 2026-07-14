@@ -24,6 +24,8 @@ services:
       - STELLAR_NETWORK=testnet
       - HORIZON_URL=https://horizon-testnet.stellar.org
       - ALLOWED_ORIGINS=http://localhost:3000
+      - JWT_SECRET=dev-secret-change-in-production
+      - TURRETS_EVALUATION_INTERVAL_MS=30000
     volumes:
       # Mount source for hot-reload via nodemon
       - ./backend:/app
