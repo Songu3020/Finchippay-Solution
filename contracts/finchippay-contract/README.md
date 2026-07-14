@@ -1,6 +1,6 @@
-# Stellar MicroPay — Soroban Contract
+# Finchippay Solution — Soroban Contract
 
-This directory contains the Soroban smart contract for Stellar MicroPay.
+This directory contains the Soroban smart contract for Finchippay Solution.
 
 ## Overview
 
@@ -33,7 +33,7 @@ cargo install --locked stellar-cli
 cargo build --target wasm32-unknown-unknown --release
 ```
 
-Output: `target/wasm32-unknown-unknown/release/stellar_micropay_contract.wasm`
+Output: `target/wasm32-unknown-unknown/release/finchippay_contract.wasm`
 
 ## Test
 
@@ -52,7 +52,7 @@ stellar keys fund alice --network testnet
 
 # Deploy
 stellar contract deploy \
-  --wasm target/wasm32-unknown-unknown/release/stellar_micropay_contract.wasm \
+  --wasm target/wasm32-unknown-unknown/release/finchippay_contract.wasm \
   --source alice \
   --network testnet
 ```
@@ -234,7 +234,7 @@ writing `src/lib.rs` carries unresolved merge residue that blocks
 
 - ~~Two `DataKey` enums were defined at module scope.~~ Merged into one in
   this PR — both sets of variants are needed by the contract methods.
-- `impl MicroPayContract { ... }` should be `impl StellarMicroPay`. The
+- `impl FinchippayContract { ... }` should be `impl FinchippaySolution`. The
   `initialize` function lost its signature in the same merge — its body
   starts directly after the section comment. A standalone follow-up issue
   needs to reconstruct the function signatures by walking the original

@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
-    "contracts/stellar-micropay-contract",
+    "contracts/finchippay-contract",
 ]
 
 [profile.release]
