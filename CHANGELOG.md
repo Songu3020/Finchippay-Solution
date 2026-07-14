@@ -11,6 +11,16 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 - Full project rename from `stellar-micropay` → `Finchippay-Solution` across all files, docs, scripts, and configs.
+- Emergency pause mechanism (circuit breaker) on `FinchippayContract`:
+  - Admin-only `pause()` and `unpause()` freeze/resume all value-transferring operations.
+  - Read-only functions remain accessible during pause.
+  - Pause guard (`require_not_paused`) on all mutating entry-points.
+- Contract upgradability via `upgrade(new_wasm_hash)` with version tracking.
+- Upper bounds on deposits, rates, timelocks, and signer counts:
+  - `MAX_ESCROW_LEDGERS`, `MAX_STREAM_DEPOSIT`, `MAX_STREAM_RATE`
+  - `MAX_ESCROW_AMOUNT`, `MAX_MULTISIG_AMOUNT`, `MAX_MULTISIG_SIGNERS`
+  - Cumulative top-up cap enforcement in `top_up_stream`
+- Contract version constant (`CONTRACT_VERSION`) and `get_version()` query.
 - `FinchippayContract` Soroban smart contract rebuild:
   - Streaming payments (`open_stream`, `claim_stream`, `top_up_stream`, `close_stream`)
   - N-of-M multi-sig payment proposals (`create_multisig`, `approve_multisig`, `cancel_multisig`)
