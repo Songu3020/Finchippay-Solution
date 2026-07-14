@@ -51,10 +51,13 @@ This document tracks what's shipped, what's in progress, and what's planned.
 
 ## 🔄 v1.3 — Hardening (In Progress)
 
+- [x] Emergency pause mechanism (circuit breaker) on the Soroban contract
+- [x] Contract upgradability (`upgrade(new_wasm_hash)`) with version tracking
+- [x] Deposit/timelock upper bounds to prevent griefing and permanent lock-up
+- [x] Cumulative top-up cap enforcement in streaming payments
 - [ ] Migrate tips/username storage from in-memory to SQLite/PostgreSQL
 - [ ] Refresh token rotation for SEP-0010 sessions
 - [ ] Soroban RPC abstraction layer in the frontend
-- [ ] Contract upgrade path (admin transfer + re-initialization guard)
 - [ ] Stream pause / resume (contract extension)
 - [ ] Integration tests for streaming and multi-sig UI flows
 

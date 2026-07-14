@@ -184,10 +184,15 @@ Key backend variables:
 - All private key operations occur exclusively inside Freighter — keys never touch the server.
 - Every contract entry-point calls `require_auth()` before mutating state.
 - Stellar secret keys are redacted from all log output and Sentry events.
-- Rate limiting (100 req/15 min globally, 20 req/min on sensitive routes) is applied at the Express layer.
+- Rate limiting (100 req/15 min globally, 20 req/min on sensitive routes, 10 req/min on account lookup) is applied at the Express layer.
 - Helmet enforces a strict CSP; all API responses include `X-Content-Type-Options: nosniff`.
 - Input sanitisation strips HTML/script injection from all user-supplied fields.
 - Webhook payloads are signed with HMAC-SHA256 and verified before processing.
+- **Emergency pause**: admin can freeze all contract value-transferring operations via `pause()` (circuit breaker pattern).
+- **Upgradability**: deployed contract WASM can be hot-patched by admin without state migration.
+- **Bounded inputs**: escrow timelocks, stream deposits/rates, and multi-sig amounts are capped to prevent griefing and permanent fund lock-up.
+- **Checked arithmetic**: all Soroban math uses `checked_add`/`checked_sub`/`checked_mul` — overflows panic, never silently wrap.
+- **Horizon timeout + retry**: backend Horizon requests use a 10 s timeout with exponential back-off (3 retries).
 
 ## Contributing
 

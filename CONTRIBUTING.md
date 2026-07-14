@@ -58,8 +58,8 @@ chore: bump soroban-sdk to 21.0.0
 
 ## Code Style
 
-- **Rust**: `rustfmt` default style; `clippy` with `--deny warnings`.
-- **TypeScript/JavaScript**: Prettier + ESLint (configs in repo root).
+- **Rust (Soroban)**: `rustfmt` default style; `clippy` with `--deny warnings`. All arithmetic must use `checked_*` methods. Every mutating contract function must authenticate the caller with `require_auth()`. New features must include tests and consider bounds/limits to prevent griefing.
+- **TypeScript/JavaScript**: Prettier + ESLint (configs in repo root). Never log or commit Stellar secret keys. Use regex redaction (`S[A-Z2-7]{55}`) before any logging.
 - **CSS**: Tailwind utility classes; avoid custom CSS unless necessary.
 
 ## Reporting Issues
