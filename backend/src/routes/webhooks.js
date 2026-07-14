@@ -6,14 +6,42 @@ const { registerWebhook, getWebhooksByPublicKey, deleteWebhook } = require("../s
 
 /**
  * POST /api/webhooks
- * Register a webhook for a Stellar account
- * Body: { publicKey, url, secret }
+ * Register a webhook for a Stellar account.
+ *
+ * Body: { publicKey: "G...", url: "https://...", secret: "whsec_..." }
+ *
+ * Validation:
+ *   - publicKey must be a valid 56-char Stellar address.
+ *   - url must be an HTTPS endpoint (reject http:// in production).
+ *   - secret must be at least 16 characters.
  */
 router.post("/", (req, res) => {
   const { publicKey, url, secret } = req.body;
   if (!publicKey || !url || !secret) {
     return res.status(400).json({ error: "publicKey, url, and secret are required" });
   }
+
+  // Validate public key format
+  if (!/^G[A-Z0-9]{55}$/.test(publicKey)) {
+    return res.status(400).json({ error: "Invalid Stellar public key format" });
+  }
+
+  // Validate URL scheme (production should only accept HTTPS)
+  let parsedUrl;
+  try {
+    parsedUrl = new URL(url);
+  } catch {
+    return res.status(400).json({ error: "Invalid URL format" });
+  }
+  if (process.env.NODE_ENV === "production" && parsedUrl.protocol !== "https:") {
+    return res.status(400).json({ error: "Webhook URL must use HTTPS in production" });
+  }
+
+  // Validate secret strength
+  if (secret.length < 16) {
+    return res.status(400).json({ error: "Secret must be at least 16 characters for HMAC-SHA256 security" });
+  }
+
   try {
     const webhook = registerWebhook(publicKey, url, secret);
     return res.status(201).json({ success: true, webhook });
@@ -24,20 +52,26 @@ router.post("/", (req, res) => {
 
 /**
  * GET /api/webhooks/:publicKey
- * Get all webhooks for a Stellar account
+ * Get all webhooks for a Stellar account.
  */
 router.get("/:publicKey", (req, res) => {
   const { publicKey } = req.params;
+  if (!/^G[A-Z0-9]{55}$/.test(publicKey)) {
+    return res.status(400).json({ error: "Invalid Stellar public key format" });
+  }
   const hooks = getWebhooksByPublicKey(publicKey);
   return res.json({ webhooks: hooks });
 });
 
 /**
  * DELETE /api/webhooks/:id
- * Delete a webhook by ID
+ * Delete a webhook by numeric ID.
  */
 router.delete("/:id", (req, res) => {
   const { id } = req.params;
+  if (!/^\d+$/.test(id)) {
+    return res.status(400).json({ error: "Invalid webhook ID — must be a numeric value" });
+  }
   const deleted = deleteWebhook(id);
   if (!deleted) {
     return res.status(404).json({ error: "Webhook not found" });
