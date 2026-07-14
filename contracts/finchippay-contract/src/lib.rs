@@ -2090,6 +2090,101 @@ mod tests {
         );
     }
 
+    // ── Stream rejection ──────────────────────────────────────────────────
+
+    #[test]
+    fn test_stream_rejection_refunds_payer() {
+        let env = Env::default();
+        let (_, client) = deploy(&env);
+        let admin = client.get_admin();
+        let payer = Address::generate(&env);
+        let recipient = Address::generate(&env);
+        env.mock_all_auths();
+        let token_id = create_token(&env, &admin, &payer, 1000);
+        let token = token::Client::new(&env, &token_id);
+        let start = env.ledger().sequence();
+        let sid = client.open_stream(&token_id, &payer, &recipient, &10, &1000);
+        // Advance 20 ledgers — 200 streamed, 800 should be refunded.
+        advance(&env, start + 20);
+        let refund = client.reject_stream(&sid, &recipient);
+        assert_eq!(refund, 800);
+        assert_eq!(token.balance(&recipient), 200);
+        assert_eq!(token.balance(&payer), 800);
+        assert!(client.get_stream(&sid).closed);
+    }
+
+    // ── Partial escrow claim ──────────────────────────────────────────────
+
+    #[test]
+    fn test_partial_escrow_claim() {
+        let env = Env::default();
+        let (_, client) = deploy(&env);
+        let admin = client.get_admin();
+        let from = Address::generate(&env);
+        let to = Address::generate(&env);
+        env.mock_all_auths();
+        let token_id = create_token(&env, &admin, &from, 5000);
+        let token = token::Client::new(&env, &token_id);
+        let release = env.ledger().sequence() + 5;
+        let memo = Symbol::new(&env, "partial");
+        let id = client.create_escrow(&token_id, &from, &to, &5000, &release, &memo);
+        advance(&env, release + 1);
+        // Claim 2000 out of 5000.
+        let remaining = client.claim_escrow_partial(&id, &2000);
+        assert_eq!(remaining, 3000);
+        assert_eq!(token.balance(&to), 2000);
+        let escrow = client.get_escrow(&id);
+        assert_eq!(escrow.amount, 3000);
+        assert_eq!(escrow.status, EscrowStatus::Pending);
+        // Claim the rest.
+        client.claim_escrow_partial(&id, &3000);
+        assert_eq!(token.balance(&to), 5000);
+        assert_eq!(client.get_escrow(&id).status, EscrowStatus::Released);
+    }
+
+    // ── Contract stats ────────────────────────────────────────────────────
+
+    #[test]
+    fn test_get_contract_stats() {
+        let env = Env::default();
+        let (_, client) = deploy(&env);
+        let admin = client.get_admin();
+        let from = Address::generate(&env);
+        let to = Address::generate(&env);
+        env.mock_all_auths();
+        let token_id = create_token(&env, &admin, &from, 10_000);
+
+        let (e0, s0, m0) = client.get_contract_stats();
+        assert_eq!((e0, s0, m0), (0, 0, 0));
+
+        let release = env.ledger().sequence() + 5;
+        let memo = Symbol::new(&env, "s");
+        client.create_escrow(&token_id, &from, &to, &2000, &release, &memo);
+        client.open_stream(&token_id, &from, &to, &10, &500);
+
+        let (e1, s1, m1) = client.get_contract_stats();
+        assert_eq!((e1, s1, m1), (1, 1, 0));
+    }
+
+    // ── Minimum amount enforcement ────────────────────────────────────────
+
+    #[test]
+    #[should_panic(expected = "amount below minimum multi-sig size")]
+    fn test_multisig_below_minimum_panics() {
+        let env = Env::default();
+        let (_, client) = deploy(&env);
+        let admin = client.get_admin();
+        let proposer = Address::generate(&env);
+        let recipient = Address::generate(&env);
+        let s1 = Address::generate(&env);
+        env.mock_all_auths();
+        let token_id = create_token(&env, &admin, &proposer, 2000);
+        let mut signers = soroban_sdk::Vec::new(&env);
+        signers.push_back(s1.clone());
+        // MIN_MULTISIG_AMOUNT is 1000, so 500 should panic.
+        client.create_multisig(&token_id, &proposer, &recipient, &500, &1, &signers, &0);
+    }
+
     #[test]
     #[should_panic(expected = "already approved")]
     fn test_multisig_double_approve_panics() {
