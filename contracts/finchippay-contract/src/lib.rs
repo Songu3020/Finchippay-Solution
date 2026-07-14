@@ -2099,6 +2099,22 @@ mod tests {
         client.send_tip(&Address::generate(&env), &from, &to, &100, &memo);
     }
 
+    #[test]
+    #[should_panic(expected = "Contract not initialized")]
+    fn test_create_escrow_before_initialize_panics() {
+        let env = Env::default();
+        let id = env.register_contract(None, FinchippayContract);
+        let client = FinchippayContractClient::new(&env, &id);
+        let from = Address::generate(&env);
+        let to = Address::generate(&env);
+        env.mock_all_auths();
+        let memo = Symbol::new(&env, "test");
+        client.create_escrow(
+            &Address::generate(&env), &from, &to, &2000,
+            &(env.ledger().sequence() + 10), &memo,
+        );
+    }
+
     // ── Multi-sig expiry ───────────────────────────────────────────────────
 
     #[test]
