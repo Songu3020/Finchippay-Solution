@@ -1149,6 +1149,59 @@ impl FinchippayContract {
         refund
     }
 
+    /// Allow a stream recipient to transfer their incoming stream to a new
+    /// recipient address. The original recipient must authorise this call.
+    /// The stream's accrued tokens at the time of transfer are automatically
+    /// claimed by the old recipient before the transfer takes effect.
+    pub fn transfer_stream(
+        env: Env,
+        stream_id: u32,
+        current_recipient: Address,
+        new_recipient: Address,
+    ) {
+        require_not_paused(&env);
+        current_recipient.require_auth();
+        if current_recipient == new_recipient {
+            panic!("new recipient must be different");
+        }
+
+        let mut stream: Stream = env
+            .storage()
+            .persistent()
+            .get(&DataKey::Stream(stream_id))
+            .expect("stream not found");
+
+        if stream.recipient != current_recipient {
+            panic!("only the current recipient may transfer");
+        }
+        if stream.closed {
+            panic!("stream is closed");
+        }
+
+        // Auto-claim accrued tokens for the old recipient before transfer.
+        let claimable = Self::_claimable(&env, &stream);
+        if claimable > 0 {
+            let token = token::Client::new(&env, &stream.token);
+            token.transfer(
+                &env.current_contract_address(),
+                &current_recipient,
+                &claimable,
+            );
+            stream.claimed = stream.claimed.checked_add(claimable).expect("overflow");
+        }
+
+        stream.recipient = new_recipient.clone();
+        env.storage()
+            .persistent()
+            .set(&DataKey::Stream(stream_id), &stream);
+        bump(&env, &DataKey::Stream(stream_id));
+
+        env.events().publish(
+            (Symbol::new(&env, "stream_transfer"), stream_id),
+            (current_recipient, new_recipient),
+        );
+    }
+
     /// Return the stream record for `stream_id`.
     pub fn get_stream(env: Env, stream_id: u32) -> Stream {
         let stream: Stream = env
