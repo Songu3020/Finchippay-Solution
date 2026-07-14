@@ -1724,7 +1724,7 @@ mod tests {
         let from = Address::generate(&env);
         let to = Address::generate(&env);
         env.mock_all_auths();
-        let token_id = create_token(&env, &admin, &from, 100);
+        let token_id = create_token(&env, &admin, &from, 2000);
         let release = env.ledger().sequence() + 20;
         let id = client.create_escrow(&token_id, &from, &to, &2000, &release, &Symbol::new(&env, "e3"));
         client.claim_escrow(&id);
@@ -1870,7 +1870,7 @@ mod tests {
         let recipient = Address::generate(&env);
         let s1 = Address::generate(&env);
         env.mock_all_auths();
-        let token_id = create_token(&env, &admin, &proposer, 500);
+        let token_id = create_token(&env, &admin, &proposer, 2000);
         let token = token::Client::new(&env, &token_id);
 
         let mut signers = soroban_sdk::Vec::new(&env);
@@ -1878,7 +1878,7 @@ mod tests {
         let pid = client.create_multisig(&token_id, &proposer, &recipient, &2000, &1, &signers, &0);
         client.cancel_multisig(&pid, &proposer);
         assert_eq!(client.get_multisig(&pid).status, MultiSigStatus::Cancelled);
-        assert_eq!(token.balance(&proposer), 500);
+        assert_eq!(token.balance(&proposer), 2000);
     }
 
     // ── Pause / Circuit breaker ────────────────────────────────────────────
