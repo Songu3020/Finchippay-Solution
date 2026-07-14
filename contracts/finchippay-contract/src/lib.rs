@@ -1283,6 +1283,9 @@ impl FinchippayContract {
         if threshold == 0 || threshold > signers.len() {
             panic!("threshold must be between 1 and signers.len()");
         }
+        if signers.len() == 0 {
+            panic!("signers list must not be empty");
+        }
         if signers.len() > MAX_MULTISIG_SIGNERS {
             panic!("too many signers");
         }
