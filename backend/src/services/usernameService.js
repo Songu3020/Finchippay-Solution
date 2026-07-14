@@ -1,67 +1,144 @@
-/* eslint-disable */
 /**
  * src/services/usernameService.js
- * Business logic for username-to-public-key mapping and resolution.
- * Uses in-memory storage for v1 (can be migrated to database later).
+ * Business logic for username ↔ Stellar public-key mapping (SEP-0002 federation layer).
+ *
+ * Uses in-memory storage for v1. To persist registrations across restarts,
+ * replace the `usernameMap` with a database-backed store.
+ *
+ * Constraints:
+ *   - Usernames: 3–20 alphanumeric characters, case-sensitive.
+ *   - Each username maps to exactly one public key.
+ *   - Each public key may only be registered to one username at a time.
  */
 
 "use strict";
 
-// In-memory storage for username → publicKey mapping
+/** @type {Map<string, string>} username → Stellar public key */
 const usernameMap = new Map();
 
+// ─── Validation helpers ───────────────────────────────────────────────────────
+
 /**
- * Register a new username with a public key.
- * @param {string} username - The username to register
- * @param {string} publicKey - The Stellar public key
+ * Throw a 400 error if `username` is not a valid Finchippay username.
+ *
+ * Valid format: 3–20 alphanumeric characters (a-z, A-Z, 0-9).
+ *
+ * @param {string} username
+ * @throws {{ message: string, status: 400 }}
+ */
+function validateUsername(username) {
+  if (!username) {
+    const err = new Error("Username is required");
+    err.status = 400;
+    throw err;
+  }
+  if (!/^[a-zA-Z0-9]{3,20}$/.test(username)) {
+    const err = new Error(
+      "Username must be 3–20 characters and contain only letters and numbers"
+    );
+    err.status = 400;
+    throw err;
+  }
+}
+
+/**
+ * Throw a 400 error if `publicKey` is not a valid Stellar public key.
+ *
+ * Valid format: 'G' followed by 55 uppercase alphanumeric characters.
+ *
+ * @param {string} publicKey
+ * @throws {{ message: string, status: 400 }}
+ */
+function validatePublicKey(publicKey) {
+  if (!publicKey) {
+    const err = new Error("Public key is required");
+    err.status = 400;
+    throw err;
+  }
+  if (!/^G[A-Z0-9]{55}$/.test(publicKey)) {
+    const err = new Error("Invalid Stellar public key format");
+    err.status = 400;
+    throw err;
+  }
+}
+
+// ─── Core operations ──────────────────────────────────────────────────────────
+
+/**
+ * Register a new username for a Stellar public key.
+ *
+ * @param {string} username - Must satisfy `validateUsername`.
+ * @param {string} publicKey - Must satisfy `validatePublicKey`.
+ * @returns {{ username: string, publicKey: string }}
+ * @throws {{ message: string, status: 409 }} if username or public key already registered.
  */
 function registerUsername(username, publicKey) {
   validateUsername(username);
   validatePublicKey(publicKey);
 
-  // Check if username already exists
   if (usernameMap.has(username)) {
-    const error = new Error("Username already registered");
-    error.status = 409;
-    throw error;
+    const err = new Error("Username already registered");
+    err.status = 409;
+    throw err;
   }
 
- // Check if public key is already registered to another username
-  /* eslint-disable no-unused-vars */
- // eslint-disable-next-line no-unused-vars
-  for (const [unused, existingPublicKey] of usernameMap.entries()) {    if (existingPublicKey === publicKey) {
-      const error = new Error("Public key already registered to another username");
-      error.status = 409;
-      throw error;
+  for (const existingKey of usernameMap.values()) {
+    if (existingKey === publicKey) {
+      const err = new Error("Public key already registered to another username");
+      err.status = 409;
+      throw err;
     }
   }
-  /* eslint-enable no-unused-vars */
 
   usernameMap.set(username, publicKey);
   return { username, publicKey };
 }
 
 /**
- * Resolve a username to its public key.
- * @param {string} username - The username to resolve
- * @returns {string} The public key associated with the username
+ * Resolve a username to its associated Stellar public key.
+ *
+ * @param {string} username
+ * @returns {{ username: string, publicKey: string }}
+ * @throws {{ message: string, status: 404 }} if username is not registered.
  */
 function resolveUsername(username) {
   validateUsername(username);
 
   const publicKey = usernameMap.get(username);
   if (!publicKey) {
-    const error = new Error("Username not found");
-    error.status = 404;
-    throw error;
+    const err = new Error("Username not found");
+    err.status = 404;
+    throw err;
   }
 
   return { username, publicKey };
 }
 
 /**
- * Get all registered usernames (for debugging/admin purposes).
- * @returns {Array} Array of { username, publicKey } objects
+ * Unregister a username.
+ *
+ * @param {string} username
+ * @returns {{ username: string }}
+ * @throws {{ message: string, status: 404 }} if username is not registered.
+ */
+function removeUsername(username) {
+  validateUsername(username);
+
+  if (!usernameMap.has(username)) {
+    const err = new Error("Username not found");
+    err.status = 404;
+    throw err;
+  }
+
+  usernameMap.delete(username);
+  return { username };
+}
+
+/**
+ * Return all registered username ↔ public-key pairs.
+ * Intended for admin / debugging purposes only.
+ *
+ * @returns {Array<{ username: string, publicKey: string }>}
  */
 function getAllUsernames() {
   return Array.from(usernameMap.entries()).map(([username, publicKey]) => ({
@@ -70,68 +147,11 @@ function getAllUsernames() {
   }));
 }
 
-/**
- * Remove a username registration.
- * @param {string} username - The username to remove
- */
-function removeUsername(username) {
-  validateUsername(username);
-
-  if (!usernameMap.has(username)) {
-    const error = new Error("Username not found");
-    error.status = 404;
-    throw error;
-  }
-
-  usernameMap.delete(username);
-  return { username };
-}
-
-/**
- * Validate username format.
- * @param {string} username - The username to validate
- */
-function validateUsername(username) {
-  if (!username) {
-    const error = new Error("Username is required");
-    error.status = 400;
-    throw error;
-  }
-
-  // Username must be 3-20 characters, alphanumeric, no spaces
-  if (!/^[a-zA-Z0-9]{3,20}$/.test(username)) {
-    const error = new Error(
-      "Username must be 3-20 characters long and contain only letters and numbers"
-    );
-    error.status = 400;
-    throw error;
-  }
-}
-
-/**
- * Validate Stellar public key format.
- * @param {string} publicKey - The public key to validate
- */
-function validatePublicKey(publicKey) {
-  if (!publicKey) {
-    const error = new Error("Public key is required");
-    error.status = 400;
-    throw error;
-  }
-
-  // Stellar public keys start with 'G' and are 56 characters (G + 55 alphanumerics)
-  if (!/^G[A-Z0-9]{55}$/.test(publicKey)) {
-    const error = new Error("Invalid Stellar public key format");
-    error.status = 400;
-    throw error;
-  }
-}
-
 module.exports = {
   registerUsername,
   resolveUsername,
-  getAllUsernames,
   removeUsername,
+  getAllUsernames,
   validateUsername,
   validatePublicKey,
 };

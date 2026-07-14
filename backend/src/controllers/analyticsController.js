@@ -1,6 +1,14 @@
 /**
  * src/controllers/analyticsController.js
- * Handles analytics endpoints for transaction volume insights.
+ * HTTP handlers for transaction volume analytics.
+ *
+ * Routes handled:
+ *   GET /api/analytics/:publicKey/summary        → total sent/received, counterparties
+ *   GET /api/analytics/:publicKey/top-recipients → top 5 recipients by XLM sent
+ *   GET /api/analytics/:publicKey/activity       → payment count by day of week
+ *
+ * Results are served from a 5-minute in-memory cache inside `analyticsService`
+ * to reduce Horizon API load for frequently-viewed dashboards.
  */
 
 "use strict";
@@ -9,7 +17,15 @@ const analyticsService = require("../services/analyticsService");
 
 /**
  * GET /api/analytics/:publicKey/summary
- * Returns: total sent, received, unique counterparties, avg transaction size.
+ * Return aggregate payment statistics for a wallet address.
+ *
+ * @param {import('express').Request}  req
+ * @param {import('express').Response} res
+ * @param {import('express').NextFunction} next
+ *
+ * @returns {200} { success: true, data: { publicKey, totalSentXLM, totalReceivedXLM,
+ *                  uniqueCounterparties, averageTransactionSize, totalTransactions } }
+ * @returns {400} Invalid public key format.
  */
 async function getSummary(req, res, next) {
   try {
@@ -23,7 +39,14 @@ async function getSummary(req, res, next) {
 
 /**
  * GET /api/analytics/:publicKey/top-recipients
- * Returns: top 5 addresses by total XLM sent.
+ * Return the top 5 addresses by total XLM sent from this wallet.
+ *
+ * @param {import('express').Request}  req
+ * @param {import('express').Response} res
+ * @param {import('express').NextFunction} next
+ *
+ * @returns {200} { success: true, data: { publicKey, topRecipients: [{address, totalXLMSent}], count } }
+ * @returns {400} Invalid public key format.
  */
 async function getTopRecipients(req, res, next) {
   try {
@@ -37,7 +60,14 @@ async function getTopRecipients(req, res, next) {
 
 /**
  * GET /api/analytics/:publicKey/activity
- * Returns: payment count by day of week (all 7 days).
+ * Return payment counts grouped by day of week (Sunday=0 … Saturday=6).
+ *
+ * @param {import('express').Request}  req
+ * @param {import('express').Response} res
+ * @param {import('express').NextFunction} next
+ *
+ * @returns {200} { success: true, data: { publicKey, activityByDay: [{day, dayIndex, transactionCount}] } }
+ * @returns {400} Invalid public key format.
  */
 async function getActivityByDay(req, res, next) {
   try {
@@ -49,8 +79,4 @@ async function getActivityByDay(req, res, next) {
   }
 }
 
-module.exports = {
-  getSummary,
-  getTopRecipients,
-  getActivityByDay,
-};
+module.exports = { getSummary, getTopRecipients, getActivityByDay };

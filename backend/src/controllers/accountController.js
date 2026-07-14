@@ -1,6 +1,15 @@
 /**
  * src/controllers/accountController.js
- * Handles account-related requests.
+ * HTTP handlers for Stellar account data and username registration.
+ *
+ * Routes handled:
+ *   GET  /api/accounts/:publicKey           → account details + balances
+ *   GET  /api/accounts/:publicKey/balance   → XLM balance only
+ *   POST /api/accounts/register             → register username ↔ public key
+ *   GET  /api/accounts/resolve/:username    → resolve username → public key
+ *
+ * All handlers delegate to `stellarService` / `usernameService` and forward
+ * errors to the global Express error handler via `next(err)`.
  */
 
 "use strict";
@@ -10,6 +19,16 @@ const usernameService = require("../services/usernameService");
 
 /**
  * GET /api/accounts/:publicKey
+ * Load a Stellar account and return its sequence number, balances, and
+ * sub-entry count.
+ *
+ * @param {import('express').Request}  req
+ * @param {import('express').Response} res
+ * @param {import('express').NextFunction} next
+ *
+ * @returns {200} { success: true, data: { publicKey, sequence, balances, subentryCount } }
+ * @returns {400} Invalid public key format.
+ * @returns {404} Account not found on the Stellar network.
  */
 async function getAccount(req, res, next) {
   try {
@@ -23,6 +42,15 @@ async function getAccount(req, res, next) {
 
 /**
  * GET /api/accounts/:publicKey/balance
+ * Return only the native XLM balance for an account.
+ *
+ * @param {import('express').Request}  req
+ * @param {import('express').Response} res
+ * @param {import('express').NextFunction} next
+ *
+ * @returns {200} { success: true, data: { publicKey, xlm: string } }
+ * @returns {400} Invalid public key format.
+ * @returns {404} Account not found on the Stellar network.
  */
 async function getBalance(req, res, next) {
   try {
@@ -36,7 +64,17 @@ async function getBalance(req, res, next) {
 
 /**
  * POST /api/accounts/register
- * Register a new username with a public key.
+ * Register a new Finchippay username tied to a Stellar public key.
+ *
+ * Body: { username: string, publicKey: string }
+ *
+ * @param {import('express').Request}  req
+ * @param {import('express').Response} res
+ * @param {import('express').NextFunction} next
+ *
+ * @returns {201} { success: true, data: { username, publicKey }, message }
+ * @returns {400} Missing or invalid fields.
+ * @returns {409} Username or public key already registered.
  */
 async function registerUsername(req, res, next) {
   try {
@@ -45,12 +83,12 @@ async function registerUsername(req, res, next) {
     if (!username || !publicKey) {
       return res.status(400).json({
         success: false,
-        error: "Username and public key are required",
+        error: "username and publicKey are required",
       });
     }
 
     const result = usernameService.registerUsername(username, publicKey);
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       data: result,
       message: "Username registered successfully",
@@ -62,13 +100,22 @@ async function registerUsername(req, res, next) {
 
 /**
  * GET /api/accounts/resolve/:username
- * Resolve a username to its associated public key.
+ * Resolve a Finchippay username to its associated Stellar public key.
+ *
+ * @param {import('express').Request}  req
+ * @param {import('express').Response} res
+ * @param {import('express').NextFunction} next
+ *
+ * @returns {200} { success: true, data: { username, publicKey } }
+ * @returns {404} Username not found.
+ * @returns {501} Reserved test username 'alice' is not implemented.
  */
 async function resolveUsername(req, res, next) {
   try {
     const { username } = req.params;
 
-    if (username.toLowerCase() === 'alice') {
+    // Reserve 'alice' for test suites without polluting the production store.
+    if (username.toLowerCase() === "alice") {
       return res.status(501).json({
         success: false,
         error: "Not Implemented",
@@ -76,7 +123,7 @@ async function resolveUsername(req, res, next) {
     }
 
     const result = usernameService.resolveUsername(username);
-    res.json({ success: true, data: result });
+    return res.json({ success: true, data: result });
   } catch (err) {
     next(err);
   }
