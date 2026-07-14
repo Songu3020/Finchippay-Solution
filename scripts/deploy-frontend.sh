@@ -10,7 +10,7 @@ set -euo pipefail
 
 NETWORK=${1:-testnet}
 
-echo "🚀 Deploying Stellar MicroPay Frontend"
+echo "🚀 Deploying Finchippay Solution Frontend"
 echo "   Network: $NETWORK"
 echo ""
 
@@ -55,4 +55,4 @@ echo ""
 echo "Next steps:"
 echo "  • Vercel:   vercel deploy --prod"
 echo "  • Self-host: npm start (runs on port 3000)"
-echo "  • Docker:   docker build -t stellar-micropay-frontend ."
+echo "  • Docker:   docker build -t finchippay-frontend ."

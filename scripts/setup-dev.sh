@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # scripts/setup-dev.sh
-# One-command local development setup for Stellar MicroPay.
+# One-command local development setup for Finchippay Solution.
 # Run this after cloning the repo.
 #
 # Usage:
@@ -12,7 +12,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
 echo ""
-echo "  ✨ Stellar MicroPay — Dev Setup"
+echo "  ✨ Finchippay Solution — Dev Setup"
 echo "  ─────────────────────────────────"
 echo ""
 

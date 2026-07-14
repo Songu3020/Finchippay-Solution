@@ -2,7 +2,7 @@ import { sha256 } from 'js-sha256';
 import { randomBytes } from 'crypto';
 
 /**
- * Zero-Knowledge Payment Proof Helper for Stellar MicroPay
+ * Zero-Knowledge Payment Proof Helper for Finchippay Solution
  * 
  * This helper provides client-side functionality for generating
  * zero-knowledge proofs of payment without revealing exact amounts.

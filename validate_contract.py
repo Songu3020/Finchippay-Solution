@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Validation script for Stellar-MicroPay streaming payment contract.
+Validation script for Finchippay-Solution streaming payment contract.
 This script validates the contract structure and logic without requiring compilation.
 """
 
@@ -10,7 +10,7 @@ import os
 def validate_contract():
     """Validate the streaming payment contract implementation."""
     
-    contract_path = "contracts/stellar-micropay-contract/src/lib.rs"
+    contract_path = "contracts/finchippay-contract/src/lib.rs"
     
     if not os.path.exists(contract_path):
         print(f"❌ Contract file not found: {contract_path}")
@@ -114,7 +114,7 @@ def validate_cargo_toml():
     """Validate Cargo.toml configuration."""
     
     cargo_path = "Cargo.toml"
-    contract_cargo_path = "contracts/stellar-micropay-contract/Cargo.toml"
+    contract_cargo_path = "contracts/finchippay-contract/Cargo.toml"
     
     # Check workspace Cargo.toml
     if not os.path.exists(cargo_path):
@@ -146,7 +146,7 @@ def validate_cargo_toml():
 
 def main():
     """Main validation function."""
-    print("🔍 Validating Stellar-MicroPay streaming payment contract...\n")
+    print("🔍 Validating Finchippay-Solution streaming payment contract...\n")
     
     contract_valid = validate_contract()
     cargo_valid = validate_cargo_toml()
