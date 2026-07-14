@@ -1,6 +1,6 @@
 /**
  * src/swagger.js
- * OpenAPI 3.0 specification for Stellar MicroPay backend API.
+ * OpenAPI 3.0 specification for Finchippay Solution backend API.
  */
 
 "use strict";
@@ -11,10 +11,10 @@ const options = {
   definition: {
     openapi: "3.0.0",
     info: {
-      title: "Stellar MicroPay API",
+      title: "Finchippay Solution API",
       version: "1.0.0",
       description:
-        "Backend API for Stellar MicroPay — instant micropayments on the Stellar network.\n\n" +
+        "Backend API for Finchippay Solution — instant micropayments on the Stellar network.\n\n" +
         "## Rate Limiting\n\n" +
         "All endpoints are rate-limited. Two limiters apply:\n\n" +
         "| Limiter | Window | Limit | Routes |\n" +
@@ -30,8 +30,8 @@ const options = {
         "When the limit is exceeded the server returns **HTTP 429** with `{ \"error\": \"Too many requests, please try again later.\" }`. " +
         "Clients should read `RateLimit-Remaining` on each response and add exponential back-off when the value approaches 0.",
       contact: {
-        name: "Stellar MicroPay",
-        url: "https://github.com/Emmy123222/Stellar-MicroPay",
+        name: "Finchippay Solution",
+        url: "https://github.com/FinChippay/Finchippay-Solution",
       },
     },
     servers: [
@@ -1044,7 +1044,7 @@ const options = {
                 "application/toml": {
                   schema: {
                     type: "string",
-                    example: 'FEDERATION_SERVER="https://stellarmicropay.io/federation"',
+                    example: 'FEDERATION_SERVER="https://stellarfinchippay.io/federation"',
                   },
                 },
               },
@@ -1080,7 +1080,7 @@ const options = {
                   schema: {
                     type: "object",
                     properties: {
-                      stellar_address: { type: "string", example: "alice*stellarmicropay.io" },
+                      stellar_address: { type: "string", example: "alice*stellarfinchippay.io" },
                       account_id: { type: "string", example: "GABC...XYZ" },
                     },
                   },

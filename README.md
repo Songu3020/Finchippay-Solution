@@ -1,12 +1,21 @@
-# Stellar-MicroPay: Streaming Payment Channels using Soroban
+# Finchippay-Solution
+
+> Instant, low-fee, non-custodial payments on the Stellar network — powered by Soroban smart contracts.
+
+[![CI](https://github.com/FinChippay/Finchippay-Solution/actions/workflows/ci.yml/badge.svg)](https://github.com/FinChippay/Finchippay-Solution/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ## Overview
 
-This project implements a Soroban smart contract for streaming payment channels on the Stellar network. The contract allows a payer to deposit XLM and stream it to a recipient at a defined rate (e.g., 1 XLM per hour). The recipient can claim the streamed amount at any time.
+Finchippay-Solution is a full-stack, production-grade decentralised payment platform built on [Stellar](https://stellar.org). It combines:
+
+- A **Soroban smart contract** (`FinchippayContract`) with streaming payments, N-of-M multi-sig approvals, time-locked escrow, on-chain tips, immutable receipts, and batch sends.
+- A **Next.js frontend** that lets users send payments, manage contacts, view analytics, create recurring schedules, and sign every transaction with their own Freighter wallet — private keys never leave the browser.
+- An **Express backend API** providing account data, federation (SEP-0002), SEP-0010 auth, analytics, Turrets execution, webhooks, and Swagger docs.
 
 ## Architecture
 
-```mermaid
+```
 flowchart LR
     user[User browser] --> frontend[Next.js frontend]
     frontend --> wallet[Freighter wallet]
@@ -15,213 +24,185 @@ flowchart LR
     backend --> horizon[Stellar Horizon]
     frontend --> horizon
     frontend --> soroban[Soroban RPC]
-    soroban --> contract[MicroPayContract]
-    contract --> stellar[Stellar testnet/mainnet]
+    soroban --> contract[FinchippayContract]
+    contract --> stellar[Stellar testnet / mainnet]
     horizon --> stellar
-
-    backend -. tips, usernames, analytics, webhooks .-> frontend
+    backend -. tips · usernames · analytics · webhooks .-> frontend
     wallet -. signs XDR .-> stellar
 ```
 
-- **Frontend** builds payment, tip, receipt, trustline, trade, and account-management flows, then asks Freighter to sign Stellar transaction XDR.
-- **Freighter** owns user keys and returns signed XDR; private keys never pass through the app.
-- **Backend API** handles account, payment-history, federation, SEP-0010 auth, creator-tip, analytics, Turrets, and webhook endpoints.
-- **Horizon** serves account balances, payment history, fee stats, transaction submission, and network data.
-- **Soroban RPC and `MicroPayContract`** record on-chain tips and receipt metadata through contract invocations.
+| Layer | Tech | Role |
+|---|---|---|
+| Smart contract | Rust / Soroban SDK 20 | On-chain logic — streaming, escrow, multi-sig |
+| Frontend | Next.js 14, TypeScript, Tailwind CSS | UI, wallet integration, Freighter signing |
+| Backend | Node.js 20, Express, Pino, Swagger | Horizon proxy, federation, auth, analytics |
+| Infrastructure | Docker, nginx, GitHub Actions | CI/CD, containerised deployment |
 
-## Features
+## Smart Contract Features
 
-- **Stream Creation**: Open payment streams with custom rates and deposits
-- **Claim Payments**: Recipients can claim available funds at any time
-- **Top-up Streams**: Add more funds to existing streams
-- **Close Streams**: Payers can close streams and receive refunds for unstreamed portions
-- **Rate-based Streaming**: Payments are calculated based on ledger progression
+The `FinchippayContract` (in `contracts/finchippay-contract/`) exposes:
 
-## Contract Structure
+| Function | Description |
+|---|---|
+| `initialize(admin)` | One-time setup; stores admin address |
+| `send_tip(token, from, to, amount)` | One-shot tip with on-chain aggregate stats |
+| `mint_receipt(from, to, amount, memo)` | Immutable payment receipt NFT |
+| `create_escrow(token, from, to, amount, release_ledger)` | Time-locked escrow |
+| `claim_escrow(id)` | Recipient claims after release ledger |
+| `cancel_escrow(id)` | Payer cancels before release ledger |
+| `open_stream(token, payer, recipient, rate_per_ledger, deposit)` | Start a streaming payment |
+| `claim_stream(stream_id, recipient)` | Drain accrued tokens from a stream |
+| `top_up_stream(stream_id, payer, amount)` | Add funds to extend a stream |
+| `close_stream(stream_id, payer)` | Early close with automatic refund |
+| `create_multisig(token, proposer, recipient, amount, threshold, signers)` | N-of-M payment proposal |
+| `approve_multisig(proposal_id, signer)` | Sign; auto-executes at threshold |
+| `cancel_multisig(proposal_id, proposer)` | Cancel and refund |
+| `batch_send(token, from, recipients[], amounts[])` | Fan-out to many recipients |
 
-### Stream Struct
+### Streaming payment maths
 
-```rust
-pub struct Stream {
-    pub payer: Address,           // Address of the payer
-    pub recipient: Address,       // Address of the recipient  
-    pub rate_per_ledger: i128,    // Amount streamed per ledger (in stroops)
-    pub deposited: i128,          // Total amount deposited (in stroops)
-    pub claimed: i128,            // Total amount claimed (in stroops)
-    pub start_ledger: u32,        // Ledger number when stream started
-}
+```
+elapsed   = current_ledger − start_ledger
+streamed  = rate_per_ledger × elapsed          (capped at deposited)
+claimable = min(streamed, deposited) − claimed
 ```
 
-### Core Functions
+## Repository Layout
 
-#### `open_stream(payer, recipient, rate_per_ledger, deposit) -> u32`
-- Creates a new payment stream
-- Returns the stream ID
-- Transfers initial deposit from payer to contract
-
-#### `claim_stream(stream_id, recipient) -> i128`
-- Claims all unclaimed streamed XLM up to current ledger
-- Only the designated recipient can claim
-- Returns the amount claimed
-
-#### `top_up_stream(stream_id, payer, amount)`
-- Adds more funds to an existing stream
-- Only the original payer can top up
-- Extends the stream duration
-
-#### `close_stream(stream_id, payer) -> i128`
-- Stops the stream and refunds unstreamed portion
-- Only the original payer can close
-- Returns the refund amount
-
-#### `get_stream(stream_id) -> Stream`
-- Returns stream information for querying
-
-#### `get_claimable(stream_id) -> i128`
-- Calculates claimable amount without claiming
-
-## Security Features
-
-- **Authorization**: Only recipients can claim, only payers can close/top-up
-- **Rate Validation**: Rates must be positive
-- **Deposit Validation**: Deposits must be positive
-- **Overflow Protection**: Uses checked arithmetic operations
-- **Access Control**: Proper authentication checks for all operations
-
-## Mathematical Calculations
-
-### Claimable Amount Calculation
 ```
-elapsed_ledgers = current_ledger - start_ledger
-total_streamed = rate_per_ledger * elapsed_ledgers
-claimable = total_streamed - claimed
-actual_claim = min(claimable, deposited - claimed)
+Finchippay-Solution/
+├── contracts/
+│   └── finchippay-contract/   # Soroban Rust contract + tests
+├── backend/
+│   ├── src/
+│   │   ├── config/            # Env validation, Horizon config
+│   │   ├── controllers/       # Route handlers
+│   │   ├── middleware/        # Auth, rate-limit, sanitisation
+│   │   ├── routes/            # Express routers
+│   │   ├── services/          # Business logic
+│   │   ├── utils/             # Logger, webhook signature
+│   │   ├── server.js          # Entry point
+│   │   └── swagger.js         # OpenAPI 3.0 spec
+│   └── __tests__/             # Jest test suite
+├── frontend/
+│   ├── components/            # React components
+│   ├── lib/                   # Stellar SDK helpers, wallet, hooks
+│   ├── pages/                 # Next.js pages
+│   ├── utils/                 # Format, validate
+│   ├── __tests__/             # Jest / React Testing Library
+│   └── e2e/                   # Playwright end-to-end tests
+├── docs/                      # API, architecture, deployment docs
+├── scripts/                   # Dev setup, deploy, load-test
+├── .github/workflows/         # CI and Docker publish
+└── docker-compose.yml         # Local full-stack environment
 ```
 
-### Refund Calculation
-```
-elapsed_ledgers = current_ledger - start_ledger
-total_streamed = rate_per_ledger * elapsed_ledgers
-refundable = deposited - max(total_streamed, claimed)
-```
+## Quick Start
 
-## Usage Examples
+### Prerequisites
 
-### Opening a Stream
-```rust
-let stream_id = StellarMicroPay::open_stream(
-    &env,
-    payer_address,
-    recipient_address,
-    1000,                    // 0.00001 XLM per ledger
-    1000000                  // 0.01 XLM deposit
-);
-```
+- Node.js 20+
+- Docker + Docker Compose (optional but recommended)
+- Rust + `wasm32-unknown-unknown` target (for contract builds)
+- [Stellar CLI](https://developers.stellar.org/docs/tools/developer-tools/cli) (for contract deployment)
+- [Freighter](https://freighter.app/) browser extension (for wallet signing)
 
-### Claiming Funds
-```rust
-let claimed = StellarMicroPay::claim_stream(
-    &env,
-    stream_id,
-    recipient_address
-);
-```
+### Local development
 
-### Topping Up a Stream
-```rust
-StellarMicroPay::top_up_stream(
-    &env,
-    stream_id,
-    payer_address,
-    500000                   // Additional 0.005 XLM
-);
+```bash
+# Clone
+git clone https://github.com/FinChippay/Finchippay-Solution.git
+cd Finchippay-Solution
+
+# Start everything with Docker
+docker compose up
+
+# Or run each service manually:
+# Backend
+cd backend && cp .env.example .env && npm install && npm run dev
+
+# Frontend (new terminal)
+cd frontend && cp .env.example .env && npm install && npm run dev
 ```
 
-### Closing a Stream
-```rust
-let refund = StellarMicroPay::close_stream(
-    &env,
-    stream_id,
-    payer_address
-);
+Frontend: http://localhost:3000  
+Backend API: http://localhost:4000  
+Swagger docs: http://localhost:4000/api/docs
+
+### Build and test the smart contract
+
+```bash
+cd contracts/finchippay-contract
+cargo test
+cargo build --release --target wasm32-unknown-unknown
 ```
 
-## Testing
+### Deploy the contract to Stellar testnet
 
-The contract includes comprehensive tests covering:
-- Stream creation and basic operations
-- Claim calculations at various ledger offsets
-- Multiple claims over time
-- Deposit limits and overflow handling
-- Top-up functionality
-- Close and refund calculations
-- Authorization and validation
-- Error conditions
+```bash
+bash scripts/deploy-contract.sh
+```
 
-## Installation and Deployment
+## Freighter Wallet Setup
 
-1. Install Rust and Soroban SDK
-2. Clone this repository
-3. Build the contract: `cargo build --release --target wasm32-unknown-unknown`
-4. Deploy to Stellar testnet/mainnet
-5. Initialize contract with required parameters
+1. Install the [Freighter extension](https://freighter.app/).
+2. Create or import a **development** wallet (never use a production wallet locally).
+3. Switch Freighter to **Testnet**.
+4. Copy your public key and fund it via Friendbot:
+   ```
+   https://friendbot.stellar.org/?addr=<YOUR_PUBLIC_KEY>
+   ```
+5. Connect Freighter in the app — the dashboard detects the funded account automatically.
 
-## Freighter Setup
+## Environment Variables
 
-New contributors need a funded Stellar testnet account before they can sign and test app flows locally.
+Copy `.env.example` in both `backend/` and `frontend/` and fill in the values. See [ENV.md](ENV.md) for the full reference.
 
-1. Install the Freighter browser extension from `https://freighter.app/`.
-2. Open Freighter and create a new wallet, or import an existing development wallet.
-3. Save the recovery phrase somewhere secure. Do not use a production wallet for local testing.
-4. In Freighter, switch the network to **Testnet**.
-5. Copy the public key for the active testnet account.
-6. Fund the account with Friendbot:
-   - In the app, connect Freighter and use the Friendbot funding action shown for unfunded testnet accounts.
-   - Or open `https://friendbot.stellar.org/?addr=<PUBLIC_KEY>` after replacing `<PUBLIC_KEY>` with your copied testnet public key.
-   - Or run `stellar keys fund <identity-name> --network testnet` if you are using Stellar CLI identities.
-7. Confirm funding by refreshing the dashboard or checking the account on Stellar Laboratory testnet explorer.
-8. Use that funded account for local payments, contract invocations, and end-to-end tests that require wallet signing.
+Key backend variables:
 
-## Acceptance Criteria Met
+| Variable | Description |
+|---|---|
+| `STELLAR_NETWORK` | `testnet` or `mainnet` |
+| `HORIZON_URL` | Horizon server URL |
+| `JWT_SECRET` | Secret for SEP-0010 JWT signing |
+| `ALLOWED_ORIGINS` | Comma-separated CORS origins |
 
-✅ **cargo test passes for all streaming tests**  
-✅ **Claim amount calculated correctly at any ledger offset**  
-✅ **Top-up increases the stream duration**  
-✅ **Close refunds the correct unclaimed amount**  
-✅ **Only the recipient can claim, only the payer can close**
+## Documentation
 
-## Technical Details
+| Doc | Description |
+|---|---|
+| [docs/api.md](docs/api.md) | Full REST API reference |
+| [docs/architecture.md](docs/architecture.md) | System design and data flows |
+| [docs/deployment.md](docs/deployment.md) | Production deployment guide |
+| [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) | Docker / cloud deployment |
+| [ENV.md](ENV.md) | Environment variable reference |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | How to contribute |
+| [CHANGELOG.md](CHANGELOG.md) | Release history |
 
-- **Contract Size**: Optimized for minimal deployment costs
-- **Gas Efficiency**: Efficient storage and computation patterns
-- **Security**: Comprehensive input validation and access controls
-- **Compliance**: Follows Soroban best practices and standards
+## Security
+
+- All private key operations occur exclusively inside Freighter — keys never touch the server.
+- Every contract entry-point calls `require_auth()` before mutating state.
+- Stellar secret keys are redacted from all log output and Sentry events.
+- Rate limiting (100 req/15 min globally, 20 req/min on sensitive routes) is applied at the Express layer.
+- Helmet enforces a strict CSP; all API responses include `X-Content-Type-Options: nosniff`.
+- Input sanitisation strips HTML/script injection from all user-supplied fields.
+- Webhook payloads are signed with HMAC-SHA256 and verified before processing.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide. In short:
+
+```bash
+git checkout -b feature/your-feature
+# make changes
+git commit -m "feat: short description"
+git push origin feature/your-feature
+# open a pull request
+```
+
+Please write tests for any new behaviour and ensure `npm test` passes before opening a PR.
 
 ## License
 
-This project is open source and available under the MIT License.
-
-## Contributing Guide
-
-
-How to Contribute 
-
-• Fork the repository. 
-
-• Clone your fork to your local machine. 
-
-• Create a new branch for your task. 
-
-git checkout -b feature/your-task-name 
-
-• Make your changes. 
-
-• Commit clearly. 
-
-git commit -m "Add: short description" 
-
-• Push your branch. 
-
-git push origin feature/your-task-name 
-
-• Open a Pull Request.
+MIT — see [LICENSE](LICENSE).

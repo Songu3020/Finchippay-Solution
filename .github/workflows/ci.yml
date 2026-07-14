@@ -1,3 +1,13 @@
+# .github/workflows/ci.yml
+# Continuous Integration for Finchippay-Solution
+#
+# Runs on every push to main/develop and on every pull-request targeting main.
+# Four parallel jobs:
+#   1. frontend  — lint, type-check, unit tests, Next.js build
+#   2. backend   — lint, unit tests
+#   3. contracts — cargo check, cargo test, WASM build
+#   4. e2e       — Playwright end-to-end tests
+
 name: CI
 
 on:
@@ -80,7 +90,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: contracts/stellar-micropay-contract
+        working-directory: contracts/finchippay-contract
 
     steps:
       - uses: actions/checkout@v4

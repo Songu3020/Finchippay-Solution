@@ -1,35 +1,33 @@
-name: Publish Docker images
+# .github/workflows/docker-publish.yml
+# Build and push Docker images to GitHub Container Registry (ghcr.io)
+# on every push to main, and on version tags (v*.*.*).
+#
+# Images published:
+#   ghcr.io/finchippay/finchippay-backend:<tag>
+#   ghcr.io/finchippay/finchippay-frontend:<tag>
 
-# Build and push backend + frontend images to GitHub Container Registry on every
-# semver tag (e.g. v1.2.3). (#255)
+name: Docker Publish
+
 on:
   push:
-    tags:
-      - "v*.*.*"
+    branches: [main]
+    tags: ["v*.*.*"]
 
 env:
   REGISTRY: ghcr.io
+  BACKEND_IMAGE: ghcr.io/finchippay/finchippay-backend
+  FRONTEND_IMAGE: ghcr.io/finchippay/finchippay-frontend
 
 jobs:
-  publish:
+  build-and-push:
+    name: Build & Push Docker Images
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
-    strategy:
-      matrix:
-        include:
-          - name: backend
-            context: ./backend
-            dockerfile: ./backend/Dockerfile.prod
-            image: stellar-micropay-backend
-          - name: frontend
-            context: ./frontend
-            dockerfile: ./frontend/Dockerfile.prod
-            image: stellar-micropay-frontend
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
@@ -38,22 +36,40 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Derive image tags and labels
-        id: meta
+      - name: Extract Docker metadata (backend)
+        id: meta-backend
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.image }}
-          # Produces a tag matching the semver release plus a moving "latest".
+          images: ${{ env.BACKEND_IMAGE }}
           tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=raw,value=latest
+            type=ref,event=branch
+            type=ref,event=tag
+            type=sha,prefix=sha-
 
-      - name: Build and push ${{ matrix.name }}
-        uses: docker/build-push-action@v6
+      - name: Extract Docker metadata (frontend)
+        id: meta-frontend
+        uses: docker/metadata-action@v5
         with:
-          context: ${{ matrix.context }}
-          file: ${{ matrix.dockerfile }}
+          images: ${{ env.FRONTEND_IMAGE }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=tag
+            type=sha,prefix=sha-
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: backend
+          file: backend/Dockerfile.prod
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.meta-backend.outputs.tags }}
+          labels: ${{ steps.meta-backend.outputs.labels }}
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: frontend
+          file: frontend/Dockerfile.prod
+          push: true
+          tags: ${{ steps.meta-frontend.outputs.tags }}
+          labels: ${{ steps.meta-frontend.outputs.labels }}

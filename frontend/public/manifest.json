@@ -1,7 +1,7 @@
 {
-  "name": "Stellar MicroPay",
-  "short_name": "MicroPay",
-  "description": "Send instant, low-fee micropayments globally using the Stellar network",
+  "name": "Finchippay Solution",
+  "short_name": "Finchippay",
+  "description": "Send instant, low-fee payments globally using the Stellar network",
   "id": "/",
   "start_url": "/",
   "scope": "/",
