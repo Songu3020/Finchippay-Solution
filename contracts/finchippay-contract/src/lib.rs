@@ -1839,6 +1839,249 @@ mod tests {
         assert_eq!(token.balance(&proposer), 500);
     }
 
+    // ── Pause / Circuit breaker ────────────────────────────────────────────
+
+    #[test]
+    #[should_panic(expected = "Contract is paused")]
+    fn test_send_tip_blocked_when_paused() {
+        let env = Env::default();
+        let (_, client) = deploy(&env);
+        let admin = client.get_admin();
+        let from = Address::generate(&env);
+        let to = Address::generate(&env);
+        env.mock_all_auths();
+        let token_id = create_token(&env, &admin, &from, 500);
+        let memo = Symbol::new(&env, "test");
+        client.pause(&admin);
+        client.send_tip(&token_id, &from, &to, &100, &memo);
+    }
+
+    #[test]
+    #[should_panic(expected = "Contract is paused")]
+    fn test_create_escrow_blocked_when_paused() {
+        let env = Env::default();
+        let (_, client) = deploy(&env);
+        let admin = client.get_admin();
+        let from = Address::generate(&env);
+        let to = Address::generate(&env);
+        env.mock_all_auths();
+        let token_id = create_token(&env, &admin, &from, 2000);
+        client.pause(&admin);
+        let release = env.ledger().sequence() + 10;
+        let memo = Symbol::new(&env, "test");
+        client.create_escrow(&token_id, &from, &to, &2000, &release, &memo);
+    }
+
+    #[test]
+    #[should_panic(expected = "Contract is paused")]
+    fn test_open_stream_blocked_when_paused() {
+        let env = Env::default();
+        let (_, client) = deploy(&env);
+        let admin = client.get_admin();
+        let payer = Address::generate(&env);
+        let recipient = Address::generate(&env);
+        env.mock_all_auths();
+        let token_id = create_token(&env, &admin, &payer, 1000);
+        client.pause(&admin);
+        client.open_stream(&token_id, &payer, &recipient, &10, &500);
+    }
+
+    // ── Batch send ─────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_batch_send_success() {
+        let env = Env::default();
+        let (_, client) = deploy(&env);
+        let admin = client.get_admin();
+        let from = Address::generate(&env);
+        let r1 = Address::generate(&env);
+        let r2 = Address::generate(&env);
+        env.mock_all_auths();
+        let token_id = create_token(&env, &admin, &from, 1000);
+        let token = token::Client::new(&env, &token_id);
+
+        let mut recipients = soroban_sdk::Vec::new(&env);
+        recipients.push_back(r1.clone());
+        recipients.push_back(r2.clone());
+        let mut amounts = soroban_sdk::Vec::new(&env);
+        amounts.push_back(300i128);
+        amounts.push_back(700i128);
+
+        client.batch_send(&token_id, &from, &recipients, &amounts);
+        assert_eq!(token.balance(&r1), 300);
+        assert_eq!(token.balance(&r2), 700);
+        assert_eq!(client.get_tip_total(&r1), 300);
+        assert_eq!(client.get_tip_total(&r2), 700);
+    }
+
+    #[test]
+    #[should_panic(expected = "arrays must have equal length")]
+    fn test_batch_send_mismatched_lengths_panics() {
+        let env = Env::default();
+        let (_, client) = deploy(&env);
+        let admin = client.get_admin();
+        let from = Address::generate(&env);
+        let r1 = Address::generate(&env);
+        env.mock_all_auths();
+        let token_id = create_token(&env, &admin, &from, 500);
+
+        let mut recipients = soroban_sdk::Vec::new(&env);
+        recipients.push_back(r1.clone());
+        recipients.push_back(r1.clone());
+        let mut amounts = soroban_sdk::Vec::new(&env);
+        amounts.push_back(100i128);
+        // Only 1 amount for 2 recipients — should panic.
+        client.batch_send(&token_id, &from, &recipients, &amounts);
+    }
+
+    // ── Self-transfer prevention ───────────────────────────────────────────
+
+    #[test]
+    #[should_panic(expected = "cannot tip yourself")]
+    fn test_self_tip_panics() {
+        let env = Env::default();
+        let (_, client) = deploy(&env);
+        let admin = client.get_admin();
+        let from = Address::generate(&env);
+        env.mock_all_auths();
+        let token_id = create_token(&env, &admin, &from, 500);
+        let memo = Symbol::new(&env, "self");
+        client.send_tip(&token_id, &from, &from, &100, &memo);
+    }
+
+    #[test]
+    #[should_panic(expected = "cannot create escrow to yourself")]
+    fn test_self_escrow_panics() {
+        let env = Env::default();
+        let (_, client) = deploy(&env);
+        let admin = client.get_admin();
+        let from = Address::generate(&env);
+        env.mock_all_auths();
+        let token_id = create_token(&env, &admin, &from, 2000);
+        let release = env.ledger().sequence() + 10;
+        let memo = Symbol::new(&env, "self");
+        client.create_escrow(&token_id, &from, &from, &2000, &release, &memo);
+    }
+
+    // ── Stream overflow safety ─────────────────────────────────────────────
+
+    #[test]
+    fn test_stream_claimable_overflow_safety() {
+        let env = Env::default();
+        let (_, client) = deploy(&env);
+        let admin = client.get_admin();
+        let payer = Address::generate(&env);
+        let recipient = Address::generate(&env);
+        env.mock_all_auths();
+        // Use max safe rate for extreme ledger simulation.
+        let token_id = create_token(&env, &admin, &payer, MAX_STREAM_DEPOSIT);
+        let start = env.ledger().sequence();
+        let sid = client.open_stream(
+            &token_id, &payer, &recipient,
+            &MAX_STREAM_RATE, &MAX_STREAM_DEPOSIT,
+        );
+        // Advance to a very large ledger — claimable should cap at deposit.
+        advance(&env, start + 1_000_000);
+        let claimable = client.get_claimable(&sid);
+        assert_eq!(claimable, MAX_STREAM_DEPOSIT);
+    }
+
+    // ── Escrow boundary conditions ─────────────────────────────────────────
+
+    #[test]
+    #[should_panic(expected = "release_ledger is too far in the future")]
+    fn test_escrow_release_too_far_panics() {
+        let env = Env::default();
+        let (_, client) = deploy(&env);
+        let admin = client.get_admin();
+        let from = Address::generate(&env);
+        let to = Address::generate(&env);
+        env.mock_all_auths();
+        let token_id = create_token(&env, &admin, &from, 10_000);
+        let far_future = env.ledger().sequence() + MAX_ESCROW_LEDGERS + 1;
+        let memo = Symbol::new(&env, "far");
+        client.create_escrow(&token_id, &from, &to, &10_000, &far_future, &memo);
+    }
+
+    #[test]
+    #[should_panic(expected = "amount below minimum escrow size")]
+    fn test_escrow_below_minimum_panics() {
+        let env = Env::default();
+        let (_, client) = deploy(&env);
+        let admin = client.get_admin();
+        let from = Address::generate(&env);
+        let to = Address::generate(&env);
+        env.mock_all_auths();
+        let token_id = create_token(&env, &admin, &from, 10_000);
+        let release = env.ledger().sequence() + 10;
+        let memo = Symbol::new(&env, "dust");
+        // MIN_ESCROW_AMOUNT is 1000, so 500 should panic.
+        client.create_escrow(&token_id, &from, &to, &500, &release, &memo);
+    }
+
+    // ── Uninitialized guard ────────────────────────────────────────────────
+
+    #[test]
+    #[should_panic(expected = "Contract not initialized")]
+    fn test_send_tip_before_initialize_panics() {
+        let env = Env::default();
+        let id = env.register_contract(None, FinchippayContract);
+        let client = FinchippayContractClient::new(&env, &id);
+        let from = Address::generate(&env);
+        let to = Address::generate(&env);
+        env.mock_all_auths();
+        let memo = Symbol::new(&env, "test");
+        // No initialize() call — should panic.
+        client.send_tip(&Address::generate(&env), &from, &to, &100, &memo);
+    }
+
+    // ── Multi-sig expiry ───────────────────────────────────────────────────
+
+    #[test]
+    fn test_multisig_timeout_after_expiry_refunds() {
+        let env = Env::default();
+        let (_, client) = deploy(&env);
+        let admin = client.get_admin();
+        let proposer = Address::generate(&env);
+        let recipient = Address::generate(&env);
+        let s1 = Address::generate(&env);
+        env.mock_all_auths();
+        let token_id = create_token(&env, &admin, &proposer, 2000);
+        let token = token::Client::new(&env, &token_id);
+
+        let mut signers = soroban_sdk::Vec::new(&env);
+        signers.push_back(s1.clone());
+        let expiry = env.ledger().sequence() + 5;
+        let pid = client.create_multisig(
+            &token_id, &proposer, &recipient, &2000, &1, &signers, &expiry,
+        );
+        // Advance past expiry.
+        advance(&env, expiry + 1);
+        client.timeout_multisig(&pid);
+        assert_eq!(client.get_multisig(&pid).status, MultiSigStatus::Cancelled);
+        assert_eq!(token.balance(&proposer), 2000);
+    }
+
+    #[test]
+    #[should_panic(expected = "duplicate signer in signers list")]
+    fn test_multisig_duplicate_signer_panics() {
+        let env = Env::default();
+        let (_, client) = deploy(&env);
+        let admin = client.get_admin();
+        let proposer = Address::generate(&env);
+        let recipient = Address::generate(&env);
+        let s1 = Address::generate(&env);
+        env.mock_all_auths();
+        let token_id = create_token(&env, &admin, &proposer, 2000);
+
+        let mut signers = soroban_sdk::Vec::new(&env);
+        signers.push_back(s1.clone());
+        signers.push_back(s1.clone()); // duplicate
+        let _pid = client.create_multisig(
+            &token_id, &proposer, &recipient, &2000, &1, &signers, &0,
+        );
+    }
+
     #[test]
     #[should_panic(expected = "already approved")]
     fn test_multisig_double_approve_panics() {
