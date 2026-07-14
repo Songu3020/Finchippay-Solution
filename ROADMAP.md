@@ -1,4 +1,4 @@
-# 🗺 Stellar MicroPay — Roadmap
+# 🗺 Finchippay Solution — Roadmap
 
 This document outlines what's been built, what's in progress, and what's planned for future versions.
 
@@ -42,7 +42,7 @@ This document outlines what's been built, what's in progress, and what's planned
 
 - [ ] Generate QR code for your wallet address
 - [ ] Scan QR code to pre-fill payment form
-- [ ] Deep link support (`stellarmicropay://pay?to=...&amount=...`)
+- [ ] Deep link support (`stellarfinchippay://pay?to=...&amount=...`)
 - [ ] Mobile-optimised QR scanner
 
 ---

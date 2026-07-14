@@ -1,6 +1,6 @@
-# Zero-Knowledge Proof Implementation for Stellar MicroPay
+# Zero-Knowledge Proof Implementation for Finchippay Solution
 
-This document describes the Zero-Knowledge proof functionality added to the Stellar MicroPay contract to enable privacy-preserving proof of payment.
+This document describes the Zero-Knowledge proof functionality added to the Finchippay Solution contract to enable privacy-preserving proof of payment.
 
 ## Overview
 

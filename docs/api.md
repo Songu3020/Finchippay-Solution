@@ -1,4 +1,4 @@
-# API Documentation — Stellar MicroPay
+# API Documentation — Finchippay Solution
 
 **Base URL:** `http://localhost:4000` (default; override with `PORT`)
 
@@ -79,7 +79,7 @@ Liveness probe. **Not** subject to global rate limiting.
 ```json
 {
   "status": "ok",
-  "service": "stellar-micropay-api",
+  "service": "finchippay-api",
   "network": "testnet",
   "timestamp": "2025-01-01T00:00:00.000Z"
 }
@@ -181,7 +181,7 @@ SEP-0001 discovery document (TOML, not JSON).
 
 **Response `200`** (`Content-Type: application/toml`)
 ```toml
-# Stellar MicroPay federation discovery
+# Finchippay Solution federation discovery
 FEDERATION_SERVER="http://localhost:4000/federation"
 ```
 
@@ -201,7 +201,7 @@ SEP-0002 federation resolver. Subject to **strict** rate limit.
 **Response `200` (type=name)**
 ```json
 {
-  "stellar_address": "alice*stellarmicropay.io",
+  "stellar_address": "alice*stellarfinchippay.io",
   "account_id": "GABC1234567890123456789012345678901234567890123456789012345"
 }
 ```
@@ -209,7 +209,7 @@ SEP-0002 federation resolver. Subject to **strict** rate limit.
 **Response `200` (type=id)**
 ```json
 {
-  "stellar_address": "alice*stellarmicropay.io",
+  "stellar_address": "alice*stellarfinchippay.io",
   "account_id": "GABC1234567890123456789012345678901234567890123456789012345"
 }
 ```

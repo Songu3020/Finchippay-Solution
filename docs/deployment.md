@@ -1,6 +1,6 @@
 # Production Deployment Guide
 
-This document describes how to deploy the Stellar-MicroPay application in a production environment using Docker and Nginx.
+This document describes how to deploy the Finchippay-Solution application in a production environment using Docker and Nginx.
 
 ## Prerequisites
 
@@ -19,8 +19,8 @@ The deployment consists of three main containers:
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/devkayazumi/Stellar-MicroPay.git
-   cd Stellar-MicroPay
+   git clone https://github.com/devkayazumi/Finchippay-Solution.git
+   cd Finchippay-Solution
    ```
 
 2. **Configure Environment Variables**:

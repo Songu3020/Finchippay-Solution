@@ -1,8 +1,8 @@
-# Deployment Guide for Stellar-MicroPay Streaming Payment Contract
+# Deployment Guide for Finchippay-Solution Streaming Payment Contract
 
 ## Overview
 
-This guide provides step-by-step instructions for deploying the Stellar-MicroPay streaming payment contract to the Stellar network and creating a pull request to the forked repository.
+This guide provides step-by-step instructions for deploying the Finchippay-Solution streaming payment contract to the Stellar network and creating a pull request to the forked repository.
 
 ## Prerequisites
 
@@ -21,13 +21,13 @@ This guide provides step-by-step instructions for deploying the Stellar-MicroPay
 
 ```bash
 # Navigate to project directory
-cd Stellar-MicroPay
+cd Finchippay-Solution
 
 # Build for WebAssembly target
 cargo build --release --target wasm32-unknown-unknown
 
 # The contract will be available at:
-# target/wasm32-unknown-unknown/release/stellar_micropay_contract.wasm
+# target/wasm32-unknown-unknown/release/finchippay_contract.wasm
 ```
 
 ### 2. Run Tests
@@ -57,7 +57,7 @@ export SOROBAN_NETWORK_PASSPHRASE="Test SDF Network ; September 2015"
 ```bash
 # Deploy the contract
 soroban contract deploy \
-  --wasm target/wasm32-unknown-unknown/release/stellar_micropay_contract.wasm \
+  --wasm target/wasm32-unknown-unknown/release/finchippay_contract.wasm \
   --source <YOUR_STELLAR_SECRET_KEY> \
   --network $STELLAR_NETWORK
 
@@ -137,12 +137,12 @@ soroban contract invoke \
 
 ### 1. Fork the Repository
 
-1. Go to the original repository: https://github.com/omolobamoyinoluwa-max/Stellar-MicroPay
+1. Go to the original repository: https://github.com/omolobamoyinoluwa-max/Finchippay-Solution
 2. Click "Fork" to create your own copy
 3. Clone your fork locally:
    ```bash
-   git clone https://github.com/<YOUR_USERNAME>/Stellar-MicroPay.git
-   cd Stellar-MicroPay
+   git clone https://github.com/<YOUR_USERNAME>/Finchippay-Solution.git
+   cd Finchippay-Solution
    ```
 
 ### 2. Add Your Changes
@@ -193,9 +193,9 @@ soroban contract invoke \
      - Error conditions
      
      ## Files Modified
-     - `contracts/stellar-micropay-contract/src/lib.rs` - Main contract implementation
+     - `contracts/finchippay-contract/src/lib.rs` - Main contract implementation
      - `Cargo.toml` - Workspace configuration
-     - `contracts/stellar-micropay-contract/Cargo.toml` - Contract dependencies
+     - `contracts/finchippay-contract/Cargo.toml` - Contract dependencies
      - `README.md` - Documentation
      - `DEPLOYMENT_GUIDE.md` - Deployment instructions
      ```

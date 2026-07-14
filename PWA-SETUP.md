@@ -1,7 +1,7 @@
-# PWA Implementation Guide for Stellar MicroPay
+# PWA Implementation Guide for Finchippay Solution
 
 ## Overview
-This document explains the PWA (Progressive Web App) implementation for Stellar MicroPay, enabling:
+This document explains the PWA (Progressive Web App) implementation for Finchippay Solution, enabling:
 - ✅ Installation on mobile home screens (Android & iOS)
 - ✅ Offline access to cached pages
 - ✅ Install banner on supported browsers
@@ -11,8 +11,8 @@ This document explains the PWA (Progressive Web App) implementation for Stellar 
 
 ### 1. **frontend/public/manifest.json**
 Web App Manifest that defines:
-- App name: "Stellar MicroPay"
-- Short name: "MicroPay"
+- App name: "Finchippay Solution"
+- Short name: "Finchippay"
 - Display mode: standalone (hides browser UI)
 - Theme color: #7B3FE4 (Stellar purple)
 - Icons: 192x192 and 512x512
@@ -140,10 +140,10 @@ This ensures:
 
 ## Cache Versioning
 
-The cache name includes a version number: `micropay-v1`
+The cache name includes a version number: `finchippay-v1`
 
 To update cached assets after deployments:
-1. Change `CACHE_NAME` in `sw.js` (e.g., to `micropay-v2`)
+1. Change `CACHE_NAME` in `sw.js` (e.g., to `finchippay-v2`)
 2. Old cache will be automatically deleted on next load
 3. New assets will be cached
 

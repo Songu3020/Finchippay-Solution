@@ -2,7 +2,7 @@
 
 ## What Was Built
 
-Three new REST API endpoints for transaction volume analytics on the Stellar MicroPay backend:
+Three new REST API endpoints for transaction volume analytics on the Finchippay Solution backend:
 
 ```
 GET /api/analytics/:publicKey/summary         — Overview stats

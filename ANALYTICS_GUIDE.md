@@ -2,7 +2,7 @@
 
 ## Overview
 
-Three new analytics endpoints have been added to the Stellar MicroPay backend to provide transaction volume insights:
+Three new analytics endpoints have been added to the Finchippay Solution backend to provide transaction volume insights:
 
 ✅ **GET /api/analytics/:publicKey/summary** — Transaction overview  
 ✅ **GET /api/analytics/:publicKey/top-recipients** — Top 5 recipients by volume  

@@ -1,7 +1,7 @@
 # Ledger Hardware Wallet Implementation Guide
 
 ## Overview
-This document describes the implementation of Ledger hardware wallet support for Stellar MicroPay, allowing security-conscious users to connect their Ledger devices instead of using Freighter.
+This document describes the implementation of Ledger hardware wallet support for Finchippay Solution, allowing security-conscious users to connect their Ledger devices instead of using Freighter.
 
 ## Implementation Details
 
