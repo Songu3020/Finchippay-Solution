@@ -251,6 +251,27 @@ fn bump<K: soroban_sdk::TryIntoVal<Env, soroban_sdk::Val> + soroban_sdk::IntoVal
     );
 }
 
+/// Get a token client for a given token address, avoiding repeated
+/// boilerplate across all token-interacting functions.
+fn get_token_client(env: &Env, token_address: &Address) -> token::Client {
+    token::Client::new(env, token_address)
+}
+
+/// Read a value from persistent storage and bump its TTL.
+fn read_state<V: soroban_sdk::TryFromVal<Env, soroban_sdk::Val>>(env: &Env, key: &DataKey, default: V) -> V {
+    let val: V = env.storage().persistent().get(key).unwrap_or(default);
+    if env.storage().persistent().has(key) {
+        bump(env, key);
+    }
+    val
+}
+
+/// Write a value to persistent storage and bump its TTL.
+fn write_state<V: soroban_sdk::TryIntoVal<Env, soroban_sdk::Val>>(env: &Env, key: &DataKey, val: &V) {
+    env.storage().persistent().set(key, val);
+    bump(env, key);
+}
+
 fn get_admin(env: &Env) -> Address {
     let key = DataKey::Admin;
     let admin: Address = env
