@@ -891,6 +891,9 @@ impl FinchippayContract {
         require_initialized(&env);
         require_not_paused(&env);
         payer.require_auth();
+        if payer == recipient {
+            panic!("cannot open stream to yourself");
+        }
         if rate_per_ledger <= 0 {
             panic!("rate_per_ledger must be positive");
         }
