@@ -265,27 +265,6 @@ fn bump<K: soroban_sdk::TryIntoVal<Env, soroban_sdk::Val> + soroban_sdk::IntoVal
     );
 }
 
-/// Get a token client for a given token address, avoiding repeated
-/// boilerplate across all token-interacting functions.
-fn get_token_client(env: &Env, token_address: &Address) -> token::Client {
-    token::Client::new(env, token_address)
-}
-
-/// Read a value from persistent storage and bump its TTL.
-fn read_state<V: soroban_sdk::TryFromVal<Env, soroban_sdk::Val>>(env: &Env, key: &DataKey, default: V) -> V {
-    let val: V = env.storage().persistent().get(key).unwrap_or(default);
-    if env.storage().persistent().has(key) {
-        bump(env, key);
-    }
-    val
-}
-
-/// Write a value to persistent storage and bump its TTL.
-fn write_state<V: soroban_sdk::TryIntoVal<Env, soroban_sdk::Val>>(env: &Env, key: &DataKey, val: &V) {
-    env.storage().persistent().set(key, val);
-    bump(env, key);
-}
-
 fn get_admin(env: &Env) -> Address {
     let key = DataKey::Admin;
     let admin: Address = env
@@ -1546,15 +1525,13 @@ impl FinchippayContract {
         if recipients.len() != amounts.len() {
             panic!("arrays must have equal length");
         }
-        // Pre-validate: sum all amounts and verify they are all positive
-        // before initiating any transfers, ensuring atomicity.
-        let mut total_amount: i128 = 0;
+        // Pre-validate: verify all amounts are positive before initiating
+        // any transfers, ensuring atomicity.
         for i in 0..amounts.len() {
             let amount = amounts.get(i).unwrap();
             if amount <= 0 {
                 panic!("amount must be positive");
             }
-            total_amount = total_amount.checked_add(amount).expect("total overflow");
         }
         let token = token::Client::new(&env, &token_address);
         for i in 0..recipients.len() {
@@ -1588,6 +1565,7 @@ impl FinchippayContract {
                 to: to.clone(),
                 amount,
                 ledger: env.ledger().sequence(),
+                memo: Symbol::new(&env, "batch"),
             };
             env.storage()
                 .persistent()
@@ -1663,8 +1641,8 @@ mod tests {
         let to = Address::generate(&env);
         env.mock_all_auths();
         let token_id = create_token(&env, &admin, &from, 1000);
-        client.send_tip(&token_id, &from, &to, &300);
-        client.send_tip(&token_id, &from, &to, &700);
+        client.send_tip(&token_id, &from, &to, &300, &Symbol::new(&env, "tip1"));
+        client.send_tip(&token_id, &from, &to, &700, &Symbol::new(&env, "tip2"));
         assert_eq!(client.get_tip_total(&to), 1000);
         assert_eq!(client.get_tip_count(&to), 2);
         let rec = client.get_tip_record(&to, &0);
@@ -1711,7 +1689,7 @@ mod tests {
         let token_id = create_token(&env, &admin, &from, 500);
         let token = token::Client::new(&env, &token_id);
         let release = env.ledger().sequence() + 10;
-        let id = client.create_escrow(&token_id, &from, &to, &500, &release);
+        let id = client.create_escrow(&token_id, &from, &to, &500, &release, &Symbol::new(&env, "e1"));
         assert_eq!(token.balance(&from), 0);
         assert_eq!(token.balance(&contract_id), 500);
         advance(&env, release + 1);
@@ -1731,7 +1709,7 @@ mod tests {
         let token_id = create_token(&env, &admin, &from, 200);
         let token = token::Client::new(&env, &token_id);
         let release = env.ledger().sequence() + 50;
-        let id = client.create_escrow(&token_id, &from, &to, &200, &release);
+        let id = client.create_escrow(&token_id, &from, &to, &200, &release, &Symbol::new(&env, "e2"));
         client.cancel_escrow(&id);
         assert_eq!(token.balance(&from), 200);
         assert_eq!(client.get_escrow(&id).status, EscrowStatus::Cancelled);
@@ -1748,7 +1726,7 @@ mod tests {
         env.mock_all_auths();
         let token_id = create_token(&env, &admin, &from, 100);
         let release = env.ledger().sequence() + 20;
-        let id = client.create_escrow(&token_id, &from, &to, &100, &release);
+        let id = client.create_escrow(&token_id, &from, &to, &2000, &release, &Symbol::new(&env, "e3"));
         client.claim_escrow(&id);
     }
 
@@ -1871,7 +1849,7 @@ mod tests {
         signers.push_back(s3.clone());
 
         // 2-of-3 threshold.
-        let pid = client.create_multisig(&token_id, &proposer, &recipient, &1_000, &2, &signers);
+        let pid = client.create_multisig(&token_id, &proposer, &recipient, &1_000, &2, &signers, &0);
         assert_eq!(client.get_multisig(&pid).status, MultiSigStatus::Pending);
 
         client.approve_multisig(&pid, &s1);
@@ -1897,7 +1875,7 @@ mod tests {
 
         let mut signers = soroban_sdk::Vec::new(&env);
         signers.push_back(s1.clone());
-        let pid = client.create_multisig(&token_id, &proposer, &recipient, &500, &1, &signers);
+        let pid = client.create_multisig(&token_id, &proposer, &recipient, &2000, &1, &signers, &0);
         client.cancel_multisig(&pid, &proposer);
         assert_eq!(client.get_multisig(&pid).status, MultiSigStatus::Cancelled);
         assert_eq!(token.balance(&proposer), 500);
@@ -2273,7 +2251,7 @@ mod tests {
         let mut signers = soroban_sdk::Vec::new(&env);
         signers.push_back(s1.clone());
         signers.push_back(s2.clone());
-        let pid = client.create_multisig(&token_id, &proposer, &recipient, &1_000, &2, &signers);
+        let pid = client.create_multisig(&token_id, &proposer, &recipient, &1_000, &2, &signers, &0);
         client.approve_multisig(&pid, &s1);
         client.approve_multisig(&pid, &s1); // duplicate — should panic
     }
