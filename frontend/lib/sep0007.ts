@@ -167,6 +167,7 @@ export function registerProtocolHandler(): void {
   try {
     // Register for web+stellar: protocol
     navigator.registerProtocolHandler('web+stellar', `${window.location.origin}?uri=%s`);
+    // eslint-disable-next-line no-console
     console.log('Successfully registered web+stellar: protocol handler');
   } catch (error) {
     console.warn('Failed to register protocol handler:', error);

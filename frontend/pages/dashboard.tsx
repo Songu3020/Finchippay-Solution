@@ -153,7 +153,7 @@ export default function Dashboard({ stellarURI }: DashboardProps) {
   const [refreshCountdown, setRefreshCountdown] = useState(AUTO_REFRESH_SECONDS);
   const [isRefreshingBalance, setIsRefreshingBalance] = useState(false);
   const { addToast } = useToastContext();
-  const showToast = (msg: string) => addToast(msg, "info");
+  const showToast = useCallback((msg: string) => addToast(msg, "info"), [addToast]);
   const [showQRModal, setShowQRModal] = useState(false);
   const [showOnboardingTour, setShowOnboardingTour] = useState(false);
 

@@ -915,7 +915,7 @@ function SendPaymentForm({
               disabled={status !== "idle"}
             />
             {memoBytes > 28 && (
-              <p className="mt-1 text-xs text-red-400">Memo exceeds Stellar's 28-byte limit.</p>
+              <p className="mt-1 text-xs text-red-400">Memo exceeds Stellar&apos;s 28-byte limit.</p>
             )}
           </div>
         )}
