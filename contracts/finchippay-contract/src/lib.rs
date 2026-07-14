@@ -212,8 +212,10 @@ const MAX_STREAM_DEPOSIT: i128 = 1_000_000_000_000_000_000;
 const MAX_STREAM_RATE: i128 = 10_000_000_000;
 /// Maximum amount for a single escrow deposit.
 const MAX_ESCROW_AMOUNT: i128 = 1_000_000_000_000_000_000;
-/// Maximum amount for a single multi-sig proposal.
-const MAX_MULTISIG_AMOUNT: i128 = 1_000_000_000_000_000_000;
+/// Minimum amount for a single escrow deposit (prevents dust attacks).
+const MIN_ESCROW_AMOUNT: i128 = 1_000;
+/// Minimum amount for a single multi-sig proposal.
+const MIN_MULTISIG_AMOUNT: i128 = 1_000;
 /// Maximum signers allowed in a multi-sig proposal.
 const MAX_MULTISIG_SIGNERS: u32 = 20;
 /// Maximum number of recipients allowed in a single batch_send call.
@@ -681,6 +683,9 @@ impl FinchippayContract {
         }
         if amount > MAX_ESCROW_AMOUNT {
             panic!("amount exceeds maximum escrow size");
+        }
+        if amount < MIN_ESCROW_AMOUNT {
+            panic!("amount below minimum escrow size");
         }
         if release_ledger <= env.ledger().sequence() {
             panic!("release_ledger must be in the future");
@@ -1205,11 +1210,17 @@ impl FinchippayContract {
         require_initialized(&env);
         require_not_paused(&env);
         proposer.require_auth();
+        if proposer == recipient {
+            panic!("cannot create multisig to yourself");
+        }
         if amount <= 0 {
             panic!("amount must be positive");
         }
         if amount > MAX_MULTISIG_AMOUNT {
             panic!("amount exceeds maximum multi-sig size");
+        }
+        if amount < MIN_MULTISIG_AMOUNT {
+            panic!("amount below minimum multi-sig size");
         }
         if threshold == 0 || threshold > signers.len() {
             panic!("threshold must be between 1 and signers.len()");
