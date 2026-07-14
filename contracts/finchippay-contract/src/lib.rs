@@ -981,7 +981,7 @@ impl FinchippayContract {
             .set(&DataKey::Stream(stream_id), &stream);
         bump(&env, &DataKey::Stream(stream_id));
 
-        let token = token::Client::new(&env, &stream.token);
+        let token = get_token_client(&env, &stream.token);
         token.transfer(&env.current_contract_address(), &recipient, &claimable);
 
         env.events().publish(
