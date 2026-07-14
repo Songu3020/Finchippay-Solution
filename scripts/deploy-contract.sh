@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 # scripts/deploy-contract.sh
-# Build and deploy the Soroban smart contract to Stellar testnet or mainnet.
+# Build and deploy the FinchippayContract to Stellar testnet or mainnet.
 #
 # Prerequisites:
 #   - Rust + wasm32-unknown-unknown target
-#   - Stellar CLI (cargo install --locked stellar-cli)
-#   - A funded Stellar identity (stellar keys generate alice --network testnet)
+#     rustup target add wasm32-unknown-unknown
+#   - Stellar CLI
+#     cargo install --locked stellar-cli
+#   - A funded Stellar identity
+#     stellar keys generate alice --network testnet
 #
 # Usage:
 #   chmod +x scripts/deploy-contract.sh
@@ -16,74 +19,73 @@
 
 set -euo pipefail
 
-NETWORK=${1:-testnet}
-IDENTITY=${2:-alice}
-CONTRACT_DIR="$(dirname "$0")/../contracts/stellar-micropay-contract"
-WASM="$CONTRACT_DIR/target/wasm32-unknown-unknown/release/stellar_micropay_contract.wasm"
+NETWORK="${1:-testnet}"
+IDENTITY="${2:-alice}"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+CONTRACT_DIR="$SCRIPT_DIR/../contracts/finchippay-contract"
+WASM="$CONTRACT_DIR/target/wasm32-unknown-unknown/release/finchippay_contract.wasm"
 
-echo "🌟 Stellar MicroPay — Contract Deployment"
-echo "   Network:  $NETWORK"
-echo "   Identity: $IDENTITY"
+echo "╔══════════════════════════════════════════╗"
+echo "║  Finchippay-Solution — Contract Deploy   ║"
+echo "╚══════════════════════════════════════════╝"
+echo ""
+echo "  Network : $NETWORK"
+echo "  Identity: $IDENTITY"
 echo ""
 
 # ─── Validate prerequisites ──────────────────────────────────────────────────
 
-if ! command -v stellar &> /dev/null; then
-  echo "❌ Stellar CLI not found."
-  echo "   Install: cargo install --locked stellar-cli"
-  exit 1
-fi
-
-if ! command -v cargo &> /dev/null; then
-  echo "❌ Rust/Cargo not found."
-  echo "   Install: https://rustup.rs"
-  exit 1
-fi
+for cmd in cargo stellar; do
+  if ! command -v "$cmd" &>/dev/null; then
+    echo "❌ Required command not found: $cmd"
+    case "$cmd" in
+      cargo)   echo "   Install Rust: https://rustup.rs" ;;
+      stellar) echo "   Install Stellar CLI: cargo install --locked stellar-cli" ;;
+    esac
+    exit 1
+  fi
+done
 
 # ─── Build ────────────────────────────────────────────────────────────────────
 
-echo "🔨 Building WASM contract..."
+echo "🔨 Building WASM (release)..."
 cd "$CONTRACT_DIR"
-cargo build --target wasm32-unknown-unknown --release
+cargo build --target wasm32-unknown-unknown --release --quiet
 
 if [[ ! -f "$WASM" ]]; then
-  echo "❌ WASM file not found after build: $WASM"
+  echo "❌ WASM not found after build: $WASM"
   exit 1
 fi
 
 WASM_SIZE=$(du -sh "$WASM" | cut -f1)
-echo "   ✅ Built: $WASM ($WASM_SIZE)"
+echo "   ✅ $WASM_SIZE  →  $WASM"
 echo ""
 
 # ─── Deploy ───────────────────────────────────────────────────────────────────
 
-echo "🚀 Deploying to $NETWORK..."
+echo "🚀 Uploading and deploying to $NETWORK..."
 CONTRACT_ID=$(stellar contract deploy \
   --wasm "$WASM" \
   --source "$IDENTITY" \
-  --network "$NETWORK" \
-  2>&1)
+  --network "$NETWORK")
 
 echo ""
-echo "✅ Contract deployed!"
-echo ""
+echo "✅ Deployed!"
 echo "   Contract ID: $CONTRACT_ID"
 echo ""
 
 # ─── Initialize ───────────────────────────────────────────────────────────────
 
-ADMIN_KEY=$(stellar keys address "$IDENTITY" 2>/dev/null || echo "")
+ADMIN_KEY=$(stellar keys address "$IDENTITY" 2>/dev/null || true)
 
 if [[ -n "$ADMIN_KEY" ]]; then
-  echo "🔧 Initializing contract with admin: $ADMIN_KEY"
-
+  echo "🔧 Initializing with admin: $ADMIN_KEY"
   stellar contract invoke \
     --id "$CONTRACT_ID" \
     --source "$IDENTITY" \
     --network "$NETWORK" \
     -- initialize \
     --admin "$ADMIN_KEY"
-
   echo "   ✅ Initialized"
 else
   echo "⚠️  Could not resolve admin key for identity '$IDENTITY'"
@@ -92,7 +94,7 @@ else
 fi
 
 echo ""
-echo "─────────────────────────────────────────"
-echo "  Add to your .env:"
+echo "─────────────────────────────────────────────────"
+echo "  Add to your .env files:"
 echo "  NEXT_PUBLIC_CONTRACT_ID=$CONTRACT_ID"
-echo "─────────────────────────────────────────"
+echo "─────────────────────────────────────────────────"

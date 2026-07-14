@@ -1,114 +1,123 @@
-# Architecture — Stellar MicroPay
+# Architecture — Finchippay-Solution
 
 ## Overview
 
-Stellar MicroPay is a three-tier Web3 application:
+Finchippay-Solution is a three-tier Web3 application built on the Stellar network.
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                         User's Browser                          │
-│                                                                 │
-│   ┌──────────────────────┐    ┌────────────────────────────┐   │
-│   │   Next.js Frontend   │    │    Freighter Extension     │   │
-│   │  (React + Tailwind)  │◄──►│   (Stellar Wallet)         │   │
-│   └──────────┬───────────┘    └────────────────────────────┘   │
-└──────────────┼──────────────────────────────────────────────────┘
-               │ HTTP (REST)
+┌────────────────────────────────────────────────────────────────────┐
+│                            User's Browser                          │
+│                                                                    │
+│   ┌──────────────────────────┐    ┌──────────────────────────┐    │
+│   │   Next.js Frontend       │    │   Freighter Extension    │    │
+│   │   (React + Tailwind CSS) │◄──►│   (Stellar Wallet)       │    │
+│   └──────────┬───────────────┘    └──────────────────────────┘    │
+└──────────────┼─────────────────────────────────────────────────────┘
+               │ HTTP/REST
                ▼
-┌──────────────────────────┐
-│   Node.js Backend API    │
-│   (Express)              │
-│                          │
-│  • Account lookups       │
-│  • Payment history       │
-│  • Username resolution   │
-└──────────────┬───────────┘
-               │ Horizon REST API
-               ▼
-┌──────────────────────────┐       ┌──────────────────────────┐
-│   Stellar Horizon API    │◄─────►│   Stellar Network        │
-│   (horizon-testnet       │       │   (Validators)           │
-│    .stellar.org)         │       │                          │
-└──────────────────────────┘       └──────────────────────────┘
-                                              ▲
-                                              │ Soroban
-                                   ┌──────────────────────────┐
-                                   │   Soroban Smart Contract │
-                                   │   (Rust/WASM)            │
-                                   │                          │
-                                   │  • Tip recording         │
-                                   │  • Escrow (v2.1)         │
-                                   └──────────────────────────┘
+┌──────────────────────────────────┐
+│   Node.js Backend API            │
+│   (Express + Pino + Swagger)     │
+│                                  │
+│  /api/accounts   /api/payments   │
+│  /api/analytics  /api/tips       │
+│  /api/auth       /api/webhooks   │
+│  /federation     /api/turrets    │
+└─────────────┬────────────────────┘
+              │ Stellar SDK
+              ▼
+┌─────────────────────────────────────┐    ┌──────────────────────────┐
+│   Stellar Horizon API               │    │   Soroban RPC            │
+│   (horizon-testnet.stellar.org)     │    │   (rpc-testnet.stellar..) │
+└─────────────────────────────────────┘    └────────────┬─────────────┘
+              │                                         │
+              ▼                                         ▼
+┌────────────────────────────────────────────────────────────────────┐
+│                       Stellar Blockchain                           │
+│                                                                    │
+│   ┌──────────────────────────────────────────────────────────┐    │
+│   │   FinchippayContract (Soroban WASM)                       │    │
+│   │   Tips · Receipts · Escrow · Streams · Multi-sig · Batch │    │
+│   └──────────────────────────────────────────────────────────┘    │
+└────────────────────────────────────────────────────────────────────┘
 ```
 
-## Payment Flow
+## Layer Details
+
+### Smart Contract (`contracts/finchippay-contract/`)
+
+A Rust/Soroban contract compiled to WASM. All state is stored in Stellar's persistent
+ledger storage with TTL bumps on every read/write.
+
+Key design decisions:
+- **Auth first**: every mutating function calls `require_auth()` before touching state.
+- **Checked arithmetic**: all additions, subtractions, and multiplications use `checked_*` methods.
+- **Event emission**: every state change emits a structured Soroban event for off-chain indexers.
+- **Storage TTL**: persistent entries are bumped to 500,000 ledgers (~1 year) to prevent expiry.
+
+### Backend (`backend/`)
+
+An Express.js API that proxies Horizon data and adds auth, federation, analytics,
+tips metadata, and webhook delivery.
+
+Key components:
+- `config/validateEnv.js` — validates all env vars at startup; exits with a clear error if any are missing.
+- `services/stellarService.js` — LRU-cached Horizon requests with timeout + exponential-backoff retry.
+- `middleware/auth.js` — SEP-0010 JWT verification.
+- `middleware/rateLimit.js` — 100 req/15 min globally; 20 req/min on sensitive routes.
+- `middleware/sanitization.js` — strips HTML/script injection from all user inputs.
+- `utils/logger.js` — Pino structured JSON logger; Stellar secret keys are redacted before any output.
+- `swagger.js` — OpenAPI 3.0 spec auto-generated from JSDoc annotations.
+
+### Frontend (`frontend/`)
+
+A Next.js 14 application. All Stellar operations are non-custodial — private keys
+never leave the browser; they stay inside the Freighter extension.
+
+Key components:
+- `lib/wallet.ts` — Freighter API wrapper; signs XDR transaction envelopes.
+- `lib/stellar.ts` — Stellar SDK helpers: build, submit, and parse transactions.
+- `lib/stellarConfig.ts` — network config (testnet / mainnet) persisted in localStorage.
+- `pages/dashboard.tsx` — main dashboard with balance, charts, quick send.
+- `pages/transactions.tsx` — paginated transaction history with filters.
+- `pages/escrow.tsx` — create / claim / cancel time-locked escrows.
+- `components/MultiSigFlow.tsx` — multi-sig proposal creation and signing UI.
+- `components/SendPaymentForm.tsx` — send XLM or any Stellar asset.
+- `components/BatchPaymentForm.tsx` — fan-out payments to multiple recipients.
+
+## Data Flow: Sending a Payment
 
 ```
-User fills form ──► Build TX (Stellar SDK) ──► Sign (Freighter)
-                                                      │
-                                                      ▼
-View on Explorer ◄── Success ◄── Submit to Horizon Network
+1. User fills in SendPaymentForm (amount, destination, asset).
+2. Frontend calls stellar.buildPaymentTx() to create an unsigned XDR envelope.
+3. Freighter signs the XDR (private key never leaves the extension).
+4. Frontend submits the signed envelope directly to Stellar Horizon.
+5. Horizon returns the transaction hash.
+6. Frontend polls /api/accounts/:key to refresh the balance display.
+7. Backend (optional) delivers a webhook if the destination has registered one.
 ```
 
-### Step-by-step
-
-1. **User inputs** destination address, amount, optional memo
-2. **Frontend** builds an unsigned Stellar transaction using `stellar-sdk`
-3. **Freighter** prompts the user to review and sign the transaction
-4. **Frontend** submits the signed XDR to Stellar's Horizon API
-5. **Horizon** broadcasts the transaction to the Stellar validator network
-6. **Network** confirms the transaction in 3–5 seconds
-7. **Frontend** polls or receives the confirmed transaction hash
-
-## Key Design Decisions
-
-### Non-custodial
-Private keys never leave the user's device. Freighter handles all signing locally in the browser extension.
-
-### Client-side transactions
-Transaction building and submission happen directly in the browser via the Stellar SDK. The backend is not required for core payment functionality — this reduces attack surface.
-
-### Backend as optional enhancement
-The Node.js backend provides:
-- Username-to-address resolution (future)
-- Cached payment history for performance
-- Analytics and aggregation
-
-If the backend is down, users can still send payments via the frontend.
-
-### Testnet first
-The default configuration targets Stellar Testnet. Switching to Mainnet requires only an environment variable change.
-
-## Security Considerations
-
-| Concern | Mitigation |
-|---------|-----------|
-| Private key exposure | Freighter handles signing — keys never touch the app |
-| Transaction replay | Stellar sequence numbers prevent replays |
-| Man-in-the-middle | HTTPS enforced; Horizon API uses TLS |
-| Malicious destination | User confirms destination in Freighter before signing |
-| Rate abuse | Express rate limiter on backend API |
-| XSS | React's default escaping; no `dangerouslySetInnerHTML` |
-
-## File Dependency Map
+## Data Flow: Claiming a Stream
 
 ```
-pages/
-  _app.tsx          ← Global wallet state (publicKey)
-  index.tsx         ← Landing page + WalletConnect
-  dashboard.tsx     ← Balance + SendPaymentForm + TransactionList
-  transactions.tsx  ← Full TransactionList
-
-components/
-  WalletConnect.tsx ← Uses lib/wallet.ts
-  SendPaymentForm.tsx ← Uses lib/stellar.ts + lib/wallet.ts
-  TransactionList.tsx ← Uses lib/stellar.ts
-  Navbar.tsx         ← Uses lib/stellar.ts (shortenAddress)
-
-lib/
-  stellar.ts  ← Horizon API calls, TX building, TX submission
-  wallet.ts   ← Freighter integration (connect, sign)
-
-utils/
-  format.ts   ← XLM formatting, date formatting, clipboard
+1. User opens the streaming payments page and selects a stream.
+2. Frontend calls soroban RPC → FinchippayContract::get_claimable(stream_id).
+3. If claimable > 0, frontend builds a Soroban invocation XDR.
+4. Freighter signs the XDR.
+5. Frontend submits to Soroban RPC.
+6. Contract transfers claimable tokens to the recipient and updates stream.claimed.
 ```
+
+## Security Properties
+
+| Property | Implementation |
+|---|---|
+| Non-custodial | Private keys remain in Freighter; server never sees them |
+| Input validation | Zod/manual validation in frontend; sanitization middleware in backend |
+| Secret redaction | Regex replaces Stellar secret keys in all log lines and Sentry events |
+| Rate limiting | express-rate-limit at 100 req/15 min globally |
+| CORS | Allowlist-based; configured via ALLOWED_ORIGINS env var |
+| CSP | Helmet enforces strict Content-Security-Policy on all API responses |
+| Auth | SEP-0010 JWT — signed by Freighter, verified by backend middleware |
+| Contract auth | Every mutating entry-point calls `require_auth()` |
+| Overflow safety | Checked arithmetic throughout the Soroban contract |

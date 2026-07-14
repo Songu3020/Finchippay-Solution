@@ -1,182 +1,73 @@
-# 🤝 Contributing to Stellar MicroPay
+# Contributing to Finchippay-Solution
 
-First off — thank you for taking the time to contribute! 🎉
+Thank you for your interest in contributing to **Finchippay-Solution**!
 
-Stellar MicroPay is an open-source project and every contribution matters, whether it's fixing a typo, reporting a bug, or building a new feature.
+## Getting Started
 
----
+1. Fork the repository at https://github.com/FinChippay/Finchippay-Solution
+2. Clone your fork: `git clone https://github.com/<your-handle>/Finchippay-Solution.git`
+3. Set up your local environment: `bash scripts/setup-dev.sh`
+4. Create a feature branch: `git checkout -b feature/your-feature`
 
-## 📋 Table of Contents
+## Development Workflow
 
-- [Code of Conduct](#code-of-conduct)
-- [How to Fork & Set Up](#how-to-fork--set-up)
-- [Running the Project Locally](#running-the-project-locally)
-- [Making Changes](#making-changes)
-- [Submitting a Pull Request](#submitting-a-pull-request)
-- [Issue Templates](#issue-templates)
-- [Project Structure Overview](#project-structure-overview)
-
----
-
-## 🧭 Code of Conduct
-
-Be kind, inclusive, and constructive. We follow the [Contributor Covenant](https://www.contributor-covenant.org/). Harassment of any kind will not be tolerated.
-
----
-
-## 🍴 How to Fork & Set Up
-
-### 1. Fork the repository
-
-Click **Fork** on the top-right of the GitHub page to create your own copy.
-
-### 2. Clone your fork
+### Running locally
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/stellar-micropay.git
-cd stellar-micropay
+# Backend
+cd backend && cp .env.example .env && npm install && npm run dev
+
+# Frontend (new terminal)
+cd frontend && cp .env.example .env && npm install && npm run dev
+
+# Smart contract
+cd contracts/finchippay-contract && cargo test
 ```
 
-### 3. Add the upstream remote
+### Before opening a PR
 
-```bash
-git remote add upstream https://github.com/your-org/stellar-micropay.git
-```
+| Check | Command |
+|---|---|
+| Backend lint | `cd backend && npm run lint` |
+| Backend tests | `cd backend && npm test` |
+| Frontend lint | `cd frontend && npm run lint` |
+| Frontend type-check | `cd frontend && npm run type-check` |
+| Frontend unit tests | `cd frontend && npm test` |
+| Contract tests | `cd contracts/finchippay-contract && cargo test` |
 
-### 4. Keep your fork up to date
+All checks must pass before a PR will be merged.
 
-```bash
-git fetch upstream
-git checkout main
-git merge upstream/main
-```
-
----
-
-## 🏃 Running the Project Locally
-
-### Frontend
-
-```bash
-cd frontend
-npm install
-cp .env.example .env.local
-# Edit .env.local if needed
-npm run dev
-```
-
-### Backend
-
-```bash
-cd backend
-npm install
-cp .env.example .env
-npm run dev
-```
-
-### Smart Contracts (Rust + Soroban)
-
-```bash
-# Install Rust
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-rustup target add wasm32-unknown-unknown
-
-# Install Stellar CLI
-cargo install --locked stellar-cli
-
-# Build the contract
-cd contracts/stellar-micropay-contract
-cargo build --target wasm32-unknown-unknown --release
-```
-
----
-
-## ✏️ Making Changes
-
-### Branch naming convention
-
-```
-feature/your-feature-name
-fix/bug-description
-docs/what-you-documented
-chore/what-you-cleaned-up
-```
-
-Example:
-```bash
-git checkout -b feature/qr-code-payments
-```
-
-### Commit message style
+## Commit Style
 
 We use [Conventional Commits](https://www.conventionalcommits.org/):
 
 ```
-feat: add QR code payment generation
-fix: correct balance display on dashboard
-docs: update API endpoint documentation
-chore: upgrade stellar-sdk to latest
+feat: add streaming payment support
+fix: handle zero-balance account on dashboard
+docs: update API reference for /api/tips
+test: add escrow cancel edge-case tests
+chore: bump soroban-sdk to 21.0.0
 ```
 
----
+## Pull Request Guidelines
 
-## 🔃 Submitting a Pull Request
+- Keep PRs focused — one feature or bug-fix per PR.
+- Add or update tests for any new behaviour.
+- Update relevant docs and the CHANGELOG under `[Unreleased]`.
+- Reference any related GitHub issues with `Closes #<issue>`.
 
-1. **Push your branch** to your fork:
-   ```bash
-   git push origin feature/your-feature-name
-   ```
+## Code Style
 
-2. **Open a PR** against the `main` branch of `stellar-micropay`
+- **Rust**: `rustfmt` default style; `clippy` with `--deny warnings`.
+- **TypeScript/JavaScript**: Prettier + ESLint (configs in repo root).
+- **CSS**: Tailwind utility classes; avoid custom CSS unless necessary.
 
-3. **Fill in the PR template** — describe what you changed and why
+## Reporting Issues
 
-4. **Link any related issues** using `Closes #123`
+Please use the GitHub issue templates:
+- [Bug report](https://github.com/FinChippay/Finchippay-Solution/issues/new?template=bug_report.md)
+- [Feature request](https://github.com/FinChippay/Finchippay-Solution/issues/new?template=feature_request.md)
 
-5. Wait for a review — we aim to respond within 48 hours
+## License
 
-### PR checklist
-
-- [ ] My code follows the project's style
-- [ ] I've tested my changes locally
-- [ ] I've updated documentation if needed
-- [ ] No new warnings or errors in the console
-- [ ] I've added a brief description of the change
-
----
-
-## 🐛 Issue Templates
-
-When creating issues, please use the appropriate template:
-
-- **Bug Report** — Something is broken
-- **Feature Request** — You have an idea
-- **Question** — You need help understanding something
-
----
-
-## 📁 Project Structure Overview
-
-```
-stellar-micropay/
-├── frontend/
-│   ├── components/     ← Reusable React components
-│   ├── pages/          ← Next.js pages (routes)
-│   ├── lib/            ← Stellar SDK + wallet helpers
-│   └── utils/          ← Shared utility functions
-├── backend/
-│   └── src/
-│       ├── routes/     ← Express route definitions
-│       ├── controllers/← Request handlers
-│       └── services/   ← Business logic
-├── contracts/          ← Soroban smart contracts (Rust)
-└── docs/               ← Architecture & API docs
-```
-
-### Good first issues
-
-Look for issues tagged `good first issue` — these are beginner-friendly tasks!
-
----
-
-Thanks again for contributing. You're helping make global payments accessible to everyone 🌍
+By contributing you agree that your contributions will be licensed under the [MIT License](LICENSE).

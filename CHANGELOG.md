@@ -1,49 +1,50 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable changes to **Finchippay-Solution** are documented here.
 
-The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project uses semantic versioning for release sections where a version is known.
+Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+---
 
 ## [Unreleased]
 
 ### Added
-
-- Architecture diagram showing how the frontend, backend, Horizon, Soroban RPC, Freighter, and `MicroPayContract` interact.
-- Freighter setup instructions for new contributors, including testnet account creation and Friendbot funding.
-- Soroban contract function reference covering parameters, return values, authorization, events, and error conditions.
-- Project changelog.
-
-## [1.0.0] - 2026-06-01
-
-### Added
-
-- Next.js frontend for Stellar payments, dashboard balances, transaction history, contacts, payment requests, creator tip pages, trading, settings, and network statistics.
-- Freighter wallet integration for connection, SEP-0010 authentication, transaction signing, and local wallet state management.
-- Stellar Horizon integration for account loading, balance lookups, payment history, fee statistics, transaction submission, and live network data.
-- Express backend API for accounts, auth, payments, federation, tips, analytics, Turrets automation, scheduled transactions, and webhook support.
-- Soroban `MicroPayContract` with admin initialization, admin transfer, tip recording, tip queries, receipt metadata minting, receipt queries, and batch sends.
-- Test coverage across frontend Jest suites, backend Jest suites, Playwright end-to-end tests, and Soroban contract tests.
-- CI workflow for frontend lint/type-check/test/build, backend lint/test, contract check/test/build, and Playwright E2E.
-- Production and development Docker configuration, PWA/offline support, Dependabot configuration, editor settings, and deployment documentation.
+- Full project rename from `stellar-micropay` → `Finchippay-Solution` across all files, docs, scripts, and configs.
+- `FinchippayContract` Soroban smart contract rebuild:
+  - Streaming payments (`open_stream`, `claim_stream`, `top_up_stream`, `close_stream`)
+  - N-of-M multi-sig payment proposals (`create_multisig`, `approve_multisig`, `cancel_multisig`)
+  - Time-locked escrow (`create_escrow`, `claim_escrow`, `cancel_escrow`)
+  - On-chain tips with aggregate stats (`send_tip`)
+  - Immutable payment receipts (`mint_receipt`)
+  - Batch fan-out sends (`batch_send`)
+  - Full test suite for all features
+- Checked arithmetic throughout the contract (overflows panic rather than wrap).
+- Storage TTL bumps on every read and write to prevent ledger expiry.
+- Enhanced API Swagger docs with streaming/multi-sig/escrow schemas.
+- Updated CI workflow to reference `contracts/finchippay-contract`.
+- Docker publish workflow updated with `ghcr.io/finchippay/*` image names.
 
 ### Changed
+- Contract directory renamed: `contracts/stellar-micropay-contract` → `contracts/finchippay-contract`
+- Contract struct renamed: `MicroPayContract` → `FinchippayContract`
+- All `stellar-micropay.vercel.app` URLs updated to `finchippay.vercel.app`
+- GitHub URLs updated to `https://github.com/FinChippay/Finchippay-Solution`
 
-- Pinned the project runtime to Node.js `20.19.5`.
-- Updated Freighter support to the v3 API surface.
-- Added storage TTL extension for persistent Soroban contract data.
-- Expanded transaction history with filtering, pagination, CSV/JSON export, PDF receipt support, memo search, category labels, and copyable transaction hashes.
-- Improved payment UX with confirmation/status modals, send-max safety copy, unfunded-account Friendbot flows, QR code support, and destination scanning.
-- Added accessibility and UI quality improvements, including focus management, contrast fixes, icon labels, and consistent cursor states.
+---
 
-### Fixed
-
-- CI blockers across frontend TypeScript, frontend lint, backend lint, backend tests, and package lockfiles.
-- Route ordering, wallet callback, FeeBump transaction handling, path payment, health route, and merge-conflict issues found during feature integration.
-
-## [0.1.0] - 2026-03-15
+## [1.0.0] — 2025-01-01
 
 ### Added
+- Initial full-stack release: Soroban contract + Next.js frontend + Express backend.
+- Freighter wallet integration (non-custodial, keys never leave the browser).
+- SEP-0002 federation, SEP-0010 JWT auth.
+- Horizon account/payment data proxy with LRU cache and retry logic.
+- Analytics dashboard with payment stats, volume charts, and sparklines.
+- Recurring payment schedules stored in the browser.
+- PWA manifest + service worker for offline support.
+- Docker Compose local dev environment.
+- GitHub Actions CI (frontend, backend, contracts, Playwright E2E).
 
-- Initial Stellar MicroPay codebase for a cross-border micro-payments platform.
-- Initial frontend, backend, Stellar SDK, Freighter API, and Soroban contract scaffolding.
-- Base project documentation and MIT license.
+[Unreleased]: https://github.com/FinChippay/Finchippay-Solution/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/FinChippay/Finchippay-Solution/releases/tag/v1.0.0
