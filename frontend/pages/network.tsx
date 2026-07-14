@@ -1,3 +1,4 @@
+import Head from "next/head";
 /**
  * pages/network.tsx
  * Stellar network statistics page with live data from Horizon API.
@@ -86,6 +87,10 @@ export default function Network() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 animate-fade-in cursor-default select-none">
+      <Head>
+        <title>Network | Finchippay-Solution</title>
+        <meta name="description" content="Live Stellar network statistics — ledger sequence, transaction fees, and more." />
+      </Head>
       {/* Header */}
       <div className="text-center mb-10">
         <h1 className="font-display text-3xl font-bold text-white mb-3">

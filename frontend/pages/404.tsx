@@ -3,11 +3,16 @@
  * Custom 404 page — matches the app's dark cosmos theme with stellar branding.
  */
 
+import Head from "next/head";
 import Link from "next/link";
 
 export default function Custom404() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
+      <Head>
+        <title>404 Not Found | Finchippay-Solution</title>
+        <meta name="description" content="Page not found — Finchippay-Solution." />
+      </Head>
       {/* Background effects */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-[400px] h-[400px] bg-stellar-500/3 rounded-full blur-3xl" />

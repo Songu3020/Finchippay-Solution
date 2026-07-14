@@ -1,3 +1,4 @@
+import Head from "next/head";
 /**
  * pages/trade.tsx
  * Stellar DEX trading interface with market/limit orders, orderbook, and trade history.
@@ -147,6 +148,10 @@ export default function Trade() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+      <Head>
+        <title>Trade | Finchippay-Solution</title>
+        <meta name="description" content="Trade XLM and USDC on the Stellar decentralised exchange." />
+      </Head>
       {/* Header */}
       <div className="mb-8">
         <h1 className="font-display text-3xl font-bold text-white mb-2">

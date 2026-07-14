@@ -1,8 +1,14 @@
+import Head from "next/head";
 import { useRouter } from "next/router";
+import Head from "next/head";
 import { useState, useEffect } from "react";
+import Head from "next/head";
 import SendPaymentForm from "@/components/SendPaymentForm";
+import Head from "next/head";
 import WalletConnect from "@/components/WalletConnect";
+import Head from "next/head";
 import { getXLMBalance } from "@/lib/stellar";
+import Head from "next/head";
 import { useWallet } from "@/lib/useWallet";
 
 interface PrefillData {
@@ -74,6 +80,10 @@ export default function RequestPage() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-16 animate-fade-in">
+      <Head>
+        <title>Request Payment | Finchippay-Solution</title>
+        <meta name="description" content="Review and complete a Finchippay payment request." />
+      </Head>
       <div className="text-center mb-10">
         <h1 className="font-display text-3xl font-bold text-white mb-3">Complete Request</h1>
         <p className="text-slate-400">Review the requested details and connect your wallet to pay.</p>

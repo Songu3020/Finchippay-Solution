@@ -3,11 +3,17 @@
  * Page for co-signers to view and sign multi-signature transactions.
  */
 
+import Head from "next/head";
 import { useRouter } from "next/router";
+import Head from "next/head";
 import { useEffect, useState } from "react";
+import Head from "next/head";
 import { Transaction, TransactionBuilder } from "@stellar/stellar-sdk";
+import Head from "next/head";
 import { NETWORK_PASSPHRASE } from "@/lib/stellar";
+import Head from "next/head";
 import { signTransactionWithWallet } from "@/lib/wallet";
+import Head from "next/head";
 import { formatAsset } from "@/utils/format";
 
 export default function MultiSigSignPage() {
@@ -76,6 +82,10 @@ export default function MultiSigSignPage() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-16">
+      <Head>
+        <title>Sign Multi-Sig | Finchippay-Solution</title>
+        <meta name="description" content="Approve a multi-signature payment proposal on Finchippay." />
+      </Head>
       <h1 className="font-display text-2xl font-bold text-white mb-6">Sign Multi-Signature Transaction</h1>
 
       {transaction && (

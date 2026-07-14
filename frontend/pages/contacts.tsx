@@ -20,6 +20,7 @@ import {
 } from "@/lib/addressBook";
 import { copyToClipboard } from "@/utils/format";
 import { useToast } from "@/lib/useToast";
+import Head from "next/head";
 import { useRouter } from "next/router";
 import { useWallet } from "@/lib/useWallet";
 
@@ -27,6 +28,7 @@ import { useWallet } from "@/lib/useWallet";
 export default function Contacts() {
   const { publicKey } = useWallet();
   const router = useRouter();
+  <Head><title>Contacts | Finchippay-Solution</title><meta name="description" content="Manage your Stellar address book and federation contacts." /></Head>
   const { visible: toastVisible, message: toastMessage, showToast } = useToast();
 
   // Contact management state
@@ -167,6 +169,10 @@ export default function Contacts() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 animate-fade-in cursor-default select-none">
+      <Head>
+        <title>Contacts | Finchippay-Solution</title>
+        <meta name="description" content="Manage your Stellar address book and federation contacts on Finchippay." />
+      </Head>
       {/* Header */}
       <div className="mb-8">
         <h1 className="font-display text-3xl font-bold text-white mb-1">

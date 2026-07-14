@@ -1,3 +1,4 @@
+import Head from "next/head";
 /**
  * pages/escrow.tsx
  * Soroban time-locked escrow (issue #213).
@@ -164,6 +165,10 @@ export default function EscrowPage() {
 
   return (
     <main className="mx-auto max-w-2xl p-6">
+      <Head>
+        <title>Escrow | Finchippay-Solution</title>
+        <meta name="description" content="Create, claim, and cancel time-locked Soroban escrow payments on Stellar." />
+      </Head>
       <h1 className="mb-2 text-2xl font-semibold">Escrow payments</h1>
       <p className="mb-6 text-sm text-gray-600">
         Lock XLM until a future ledger. Recipient claims on or after the

@@ -3,17 +3,25 @@
  * The landing page for shareable payment links.
  * Validates expiration, handles errors, and pre-fills the payment form.
  */
+import Head from "next/head";
 import { useRouter } from "next/router";
+import Head from "next/head";
 import { useState, useEffect } from "react";
+import Head from "next/head";
 import SendPaymentForm from "@/components/SendPaymentForm";
+import Head from "next/head";
 import WalletConnect from "@/components/WalletConnect";
+import Head from "next/head";
 import { getXLMBalance, getContractTipTotal, CONTRACT_ID } from "@/lib/stellar";
+import Head from "next/head";
 import { formatStroopsToXLM } from "@/utils/format";
+import Head from "next/head";
 import {
   canRedeemPaymentLink,
   markPaymentLinkRedeemed,
   parsePaymentLinkQuery,
 } from "@/lib/paymentLinks";
+import Head from "next/head";
 import { useWallet } from "@/lib/useWallet";
 
 interface PrefillData {
@@ -143,6 +151,10 @@ export default function PayPage() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-16 animate-fade-in">
+      <Head>
+        <title>Pay | Finchippay-Solution</title>
+        <meta name="description" content="Complete a Stellar payment request via Finchippay." />
+      </Head>
       <div className="text-center mb-10">
         <h1 className="font-display text-3xl font-bold text-white mb-3">
           Complete Payment
