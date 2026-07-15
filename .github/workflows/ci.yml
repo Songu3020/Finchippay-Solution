@@ -2,11 +2,12 @@
 # Continuous Integration for Finchippay-Solution
 #
 # Runs on every push to main/develop and on every pull-request targeting main.
-# Four parallel jobs:
+# Five parallel jobs:
 #   1. frontend  — lint, type-check, unit tests, Next.js build
 #   2. backend   — lint, unit tests
 #   3. contracts — cargo check, cargo test, WASM build
-#   4. e2e       — Playwright end-to-end tests
+#   4. compose   — validate Docker Compose configurations
+#   5. e2e       — Playwright end-to-end tests
 
 name: CI
 
@@ -117,6 +118,20 @@ jobs:
 
       - name: Build WASM
         run: cargo build --target wasm32-unknown-unknown --release
+
+  # ─── Docker Compose Validation ──────────────────────────────────────────────
+  compose:
+    name: Docker Compose Config
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate docker-compose.yml (dev)
+        run: docker compose -f docker-compose.yml config --quiet
+
+      - name: Validate docker-compose.prod.yml (production)
+        run: docker compose -f docker-compose.prod.yml config --quiet
 
   # ─── E2E Tests ─────────────────────────────────────────────────────────────
   e2e:
