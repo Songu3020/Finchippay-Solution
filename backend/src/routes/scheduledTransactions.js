@@ -1,3 +1,8 @@
+/**
+ * src/routes/scheduledTransactions.js
+ * Routes for scheduling future Stellar transaction submissions.
+ */
+
 "use strict";
 
 const express = require("express");
