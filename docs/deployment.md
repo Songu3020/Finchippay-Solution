@@ -5,16 +5,15 @@ This guide covers deploying Finchippay-Solution to a production environment usin
 ## Architecture
 
 ```
-Internet → nginx (port 80/443)
-              ├── / → frontend (Next.js static export)
+Internet → frontend (nginx, port 80)
+              ├── / → Next.js static export (built-in nginx)
               ├── /api/ → backend (Express, port 4000)
               └── /federation → backend federation route
 ```
 
-Three Docker containers:
-- **finchippay-frontend** — Next.js static export served by nginx
+Two Docker containers:
+- **finchippay-frontend** — Next.js static export served by built-in nginx with API proxying
 - **finchippay-backend** — Express API on port 4000
-- **nginx** — Reverse proxy + SSL termination
 
 ## Prerequisites
 
@@ -89,13 +88,15 @@ curl http://localhost
 
 ## nginx Configuration
 
-`nginx/nginx.conf` includes:
+The frontend container includes a built-in nginx (`frontend/nginx.conf`) that provides:
 - Gzip compression for text, CSS, JS, and JSON
 - Security headers: `X-Frame-Options`, `X-Content-Type-Options`, `Content-Security-Policy`
 - Reverse proxy for `/api/` and `/federation` → backend
 - Static file serving for the Next.js export
 
-For TLS, add a Certbot/Let's Encrypt block to `nginx.conf` or front nginx with a load balancer.
+A standalone reference nginx config remains at `nginx/nginx.conf` for non-Docker reverse-proxy setups.
+
+For TLS, front the frontend container with a load balancer that provides SSL termination (e.g., AWS ALB, Cloudflare, or a Certbot-managed nginx).
 
 ## Updating
 
@@ -109,6 +110,9 @@ docker compose -f docker-compose.prod.yml up --build -d --no-deps backend fronte
 ```bash
 # Tail all logs
 docker compose -f docker-compose.prod.yml logs -f
+
+# Frontend only
+docker compose -f docker-compose.prod.yml logs -f frontend
 
 # Backend only
 docker compose -f docker-compose.prod.yml logs -f backend
